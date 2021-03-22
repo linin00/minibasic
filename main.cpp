@@ -4,8 +4,8 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    minibasic w;
-    w.show();
-    return a.exec();
+    QApplication a(argc, argv);//处理命令行参数
+    minibasic w;//申请对象
+    w.show();//显示窗口
+    return a.exec();//移交程序控制权
 }

@@ -9,11 +9,17 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    expression.cpp \
     main.cpp \
-    minibasic.cpp
+    minibasic.cpp \
+    program.cpp \
+    statement.cpp
 
 HEADERS += \
-    minibasic.h
+    expression.h \
+    minibasic.h \
+    program.h \
+    statement.h
 
 FORMS += \
     minibasic.ui
