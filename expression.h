@@ -11,7 +11,9 @@ public:
     ~expression(){}
     expression* left;
     expression* right;
-    virtual double value() = 0;
+    double value(){
+        return 0;
+    }
 private:
 };
 
@@ -23,20 +25,30 @@ public:
         right = nullptr;
         root = 0;
     }
+    ConstantExp(double val) {
+        left = nullptr;
+        right = nullptr;
+        root = val;
+    }
     ~ConstantExp() {}
     double value();
 };
 
 class IdentifierExp: public expression {
+private:
+    double val = 0;//标识符的值
 public:
-    QString root;
+    QString root;//标识符字符串（名称）
     IdentifierExp() {
-        left = nullptr;
-        right = nullptr;
+        left = nullptr;//左节点为空
+        right = nullptr;//右节点为空
         root.clear();
     }
     ~IdentifierExp() {}
     double value();
+    void setRoot(QString inputStr) {
+        root = inputStr;
+    }
 };
 
 class CompoundExp: public expression {
@@ -46,6 +58,11 @@ public:
         left = nullptr;
         right = nullptr;
         root.clear();
+    }
+    CompoundExp(QString op, expression* ri, expression* le) {
+        left = le;
+        right = ri;
+        root = op;
     }
     ~CompoundExp() {}
     double value();

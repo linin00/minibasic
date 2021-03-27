@@ -17,45 +17,47 @@ minibasic::~minibasic()
 }
 
 
-void minibasic::on_textEdit_textChanged()//从输入框获取命令
+void minibasic::on_INPUT_textChanged()//从输入框获取命令
 {
-    program->read_from_input(ui -> textEdit-> toPlainText());
-    ui -> textBrowser_2 -> setText(program->program);
+    program->read_from_input(ui -> INPUT -> toPlainText());//实时读取
+    ui -> CODE -> setText(program->input);//实时显示
 }
 
-void minibasic::on_pushButton_clicked()//从文件读取命令
+void minibasic::on_LOAD_clicked()//从文件读取命令
 {
-    QString fileName = QFileDialog::getOpenFileName(//读取的是文件绝对路径
+    QString fileName = QFileDialog::getOpenFileName(//读取记录的是文件路径
             this,
             tr("选择basic程序文件"),
             "/",
             tr("basic(*.basic)"));
-    if (fileName.isEmpty()) {
-            QMessageBox::warning(this, "Warning!", "Failed to open the basic program!");
+    if (fileName.isEmpty()) {//如果没有这个文件
+            QMessageBox::warning(this, "警告!", "没有找到文件");
         }
-        else {
+        else {//如果有这个文件
             QFile file(fileName);
             QString tempStr;
             if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {//如果误写为WriteOnly，文件内容会被擦除
-                program->program = nullptr;
+                //program->program = nullptr;
                 QMessageBox::warning(this, "Warning!", "Failed to open the basic program!");
             }
-            else {
-                tempStr = file.readAll();
-                program->read_from_files(tempStr);
+            else {//打开成功
+                tempStr = file.readAll();//将文件内容全部读到tempStr
+                program->read_from_files(tempStr);//记录到input
+                ui -> CODE -> setText(program->input);//实时显示
             }
-            file.close();
+            file.close();//关闭文件
         }
-    ui -> textBrowser_2 -> setText(program->program);
 }
-void minibasic::on_pushButton_2_clicked()//运行程序，打印结果和语句树
+void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树
 {
-
+    program->build();
+    ui -> TREE -> setText(program->TREE);
+    ui -> RESULT -> setText(program->RESULT);
 }
 
 
-void minibasic::on_pushButton_3_clicked()//清空代码、运行结果、代码树
+void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树
 {
     program->clear();
-    ui -> textBrowser_2 -> setText(program->program);
+    //ui -> textBrowser_2 -> setText(program->program);
 }
