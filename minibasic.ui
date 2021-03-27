@@ -7,11 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>798</height>
+    <height>823</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>minibasic</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="label">
@@ -22,6 +25,9 @@
       <width>72</width>
       <height>15</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
     </property>
     <property name="text">
      <string>代码</string>
@@ -36,6 +42,9 @@
       <height>15</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
+    </property>
     <property name="text">
      <string>运行结果</string>
     </property>
@@ -48,6 +57,9 @@
       <width>91</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
     </property>
     <property name="text">
      <string>语句与语法树</string>
@@ -62,6 +74,9 @@
       <height>24</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
+    </property>
     <property name="text">
      <string>载入代码（LOAD）</string>
     </property>
@@ -75,6 +90,9 @@
       <height>24</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
+    </property>
     <property name="text">
      <string>RUN</string>
     </property>
@@ -87,6 +105,9 @@
       <width>161</width>
       <height>24</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
     </property>
     <property name="text">
      <string>CLEAR</string>
@@ -113,6 +134,9 @@
       <width>351</width>
       <height>231</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>

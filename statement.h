@@ -9,24 +9,41 @@ public:
     QString root;//根节点
     statement(){//初始化
         root.clear();
+        right = nullptr;
+        left = nullptr;
     }
     ~statement(){}
+    virtual expression* Left(){
+        return left;
+    }
+    virtual expression* Right(){
+        return right;
+    }
 private:
+    expression* left;
+    expression* right;
 };
 
 class RemStmt: public statement {//右子树为空，左子树是字符串
 private:
-    QString left;
-    QString right;
+    IdentifierExp* left;
+    expression* right;
 public:
     RemStmt() {//初始化
         root = "REM";
-        left.clear();
+        left = nullptr;
         right = nullptr;
     }
     ~RemStmt() {}
     void setLeft (QString inputStr) {
-        left = inputStr;
+        left = new IdentifierExp;
+        left->root = inputStr;
+    }
+    virtual expression* Left(){
+        return left;
+    }
+    virtual expression* Right(){
+        return right;
     }
 };
 
@@ -47,12 +64,18 @@ public:
         right = in;
     }
     ~LetStmt() {}
+    virtual expression* Left(){
+        return left;
+    }
+    virtual expression* Right(){
+        return right;
+    }
 };
 
 class PrintStmt: public statement {//左子树是表达式，右子树为空
 private:
     expression* left;
-    QString right;
+    expression* right;
 public:
     PrintStmt() {
         root = "PRINT";
@@ -63,28 +86,40 @@ public:
         left = le;
     }
     ~PrintStmt() {}
+    expression* Left(){
+        return left;
+    }
+    expression* Right(){
+        return right;
+    }
 };
 
 class InputStmt: public statement {//左子树是表达式（标识符），右子树是空
 private:
     expression* left;
-    QString right;
+    expression* right;
 public:
     InputStmt() {
         root = "INPUT";
         left = nullptr;
-        right.clear();
+        right = nullptr;
     }
     void setLeft(expression* le) {
         left = le;
     }
     ~InputStmt() {}
+    expression* Left(){
+        return left;
+    }
+    expression* Right(){
+        return right;
+    }
 };
 
 class GotoStmt: public statement {//左子树是表达式，右子树是空
 private:
     expression* left;
-    QString right;
+    expression* right;
 public:
     GotoStmt() {
         root = "GOTO";
@@ -95,6 +130,12 @@ public:
         left = le;
     }
     ~GotoStmt() {}
+    expression* Left(){
+        return left;
+    }
+    expression* Right(){
+        return right;
+    }
 };
 
 class IfStmt: public statement {//四个子节点
@@ -118,12 +159,18 @@ public:
         right = Ri;
     }
     ~IfStmt() {}
+    expression* Left(){
+        return left;
+    }
+    expression* Right(){
+        return right;
+    }
 };
 
 class EndStmt: public statement {//左右为空
 private:
-    QString left;
-    QString right;
+    expression* left;
+    expression* right;
 public:
     EndStmt() {
         root = "END";
@@ -131,6 +178,12 @@ public:
         right = nullptr;
     }
     ~EndStmt() {}
+    expression* Left(){
+        return left;
+    }
+    expression* Right(){
+        return right;
+    }
 };
 
 #endif // STATEMENT_H

@@ -19,6 +19,9 @@ minibasic::~minibasic()
 
 void minibasic::on_INPUT_textChanged()//从输入框获取命令
 {
+    program->clear();
+    ui -> RESULT -> setText(program->RESULT);
+    ui -> TREE -> setText(program->TREE);
     program->read_from_input(ui -> INPUT -> toPlainText());//实时读取
     ui -> CODE -> setText(program->input);//实时显示
 }
@@ -42,6 +45,10 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
             }
             else {//打开成功
                 tempStr = file.readAll();//将文件内容全部读到tempStr
+                program->clear();
+                ui -> RESULT -> setText(program->RESULT);
+                ui -> TREE -> setText(program->TREE);
+                ui -> INPUT -> clear();
                 program->read_from_files(tempStr);//记录到input
                 ui -> CODE -> setText(program->input);//实时显示
             }
@@ -59,5 +66,8 @@ void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树
 void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树
 {
     program->clear();
-    //ui -> textBrowser_2 -> setText(program->program);
+    ui -> CODE -> setText(program->input);
+    ui -> RESULT -> setText(program->RESULT);
+    ui -> TREE -> setText(program->TREE);
+    ui -> INPUT -> clear();
 }
