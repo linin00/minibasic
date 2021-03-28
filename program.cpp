@@ -2,6 +2,7 @@
 #include <QStringList>
 #include <iostream>
 #include <QStack>
+#include <regex>
 void Program::read_from_input(QString inputStr) {
     input = inputStr;
 }
@@ -120,7 +121,7 @@ expression* Program::buildExp(QStringList inputList) {
                 inputList.removeFirst();
                 continue;
             }
-            /*如果temp不是常数,那就是标识符*/
+            //如果temp不是常数,那就是标识符
             int size = identifier.size();
             if (size == 0) abort();
             for (int i = 0; i < size; i++) {
@@ -174,7 +175,6 @@ void Program::build() {
             }
         }
     }
-    buildtree();
     run();
 }
 statement* Program::build(QString inputStr) {
@@ -278,38 +278,40 @@ statement* Program::build(QString inputStr) {
     }
     else if (strList[0] == "IF") {
         IfStmt* result = new IfStmt;
+
         strList.removeFirst();//删除IF
         QString temp = strList.join(" ");//先合并~~~
-        QStringList list = temp.split("THEN");//再分割。。
-        if (list.size() != 2) abort();
-        expression* tar = buildExp(list[1].split(" "));//目标表达式
-        /*构建条件表达式*/
-        if (list[1].contains(">")) {
-            QStringList exp = list[1].split(">");
+        QStringList list = temp.split(" THEN ");//再分割。。
+        if (list.size() != 2) abort();//如果不能分成两部分，报错
+        expression* tar = buildExp(list[1].split(" "));//生成目标表达式
+
+        //构建条件表达式
+        if (list[0].contains(" > ")) {//判断是否含有逻辑运算符
+            QStringList exp = list[0].split(" > ");
             if (exp.size() != 2) abort();//如果不能分成两个部分，报错
             result->set(">", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
-        else if (list[1].contains(">=")) {
-            QStringList exp = list[1].split(">=");
+        else if (list[0].contains(" >= ")) {
+            QStringList exp = list[0].split(" >= ");
             if (exp.size() != 2) abort();//如果不能分成两个部分，报错
             result->set(">=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
-        else if (list[1].contains("<")) {
-            QStringList exp = list[1].split("<");
+        else if (list[0].contains(" < ")) {
+            QStringList exp = list[0].split(" < ");
             if (exp.size() != 2) abort();//如果不能分成两个部分，报错
             result->set("<", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
-        else if (list[1].contains("<=")) {
-            QStringList exp = list[1].split("<=");
+        else if (list[0].contains(" <= ")) {
+            QStringList exp = list[0].split(" <= ");
             if (exp.size() != 2) abort();//如果不能分成两个部分，报错
             result->set("<=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
-        else if (list[1].contains("==")) {
-            QStringList exp = list[1].split("==");
+        else if (list[0].contains(" == ")) {
+            QStringList exp = list[0].split(" == ");
             if (exp.size() != 2) abort();//如果不能分成两个部分，报错
             result->set("==", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
-
+        else abort();
         result->lineNum = lineNum;//记录行号；
         return result;
     }
@@ -329,18 +331,26 @@ void Program::clear() {
     identifier.clear();
 }
 
-void Program::buildtree() {
+QString Program::buildtree(int i) {
     int size = program.size();
-    for (int i = 0; i < size; i++) {//逐个处理指令树后合并
-        TREE = TREE + QString::number(program[i]->lineNum);//行号
-        TREE = TREE + " ";
-        TREE = TREE + program[i]->root;////////
-        TREE = TREE + "\n";
-        /*子节点*/
-        int level = 1;
-        TREE = TREE + buildtree(level, program[i]->Left());
-        TREE = TREE + buildtree(level, program[i]->Right());
+    if (i > size - 1) abort();
+    QString result;
+    //处理指令树后返回
+    result = result + QString::number(program[i]->lineNum);//行号
+    result = result + " ";
+    result = result + program[i]->root;////////
+    result = result + "\n";
+    if (program[i]->root=="IF THEN") {
+        result = result + "     " + program[i]->OP() + "\n";
     }
+    /*子节点*/
+    result = result + buildtree(1, program[i]->Left());
+    result = result + buildtree(1, program[i]->Right());
+
+    if (program[i]->root=="IF THEN") {
+        result = result + buildtree(1, program[i]->TAR());
+    }
+    return result;
 }
 
 QString Program::buildtree(int level, expression* exp) {
@@ -358,4 +368,20 @@ QString Program::buildtree(int level, expression* exp) {
 
     return result;
 }
-void Program::run() {}
+void Program::run() {
+    TREE.clear();
+    int size = program.size();
+    for (int i = 0; i < size ; i++) {//先打印到当前执行的命令
+        TREE = TREE + buildtree(i);
+        Tree->setText(TREE);
+        if (program[i]->root == "REM") {
+            continue;//不做任何事
+        }
+        else if (program[i]->root == "LET") {}
+        else if (program[i]->root == "INPUT") {}
+        else if (program[i]->root == "PRINT") {}
+        else if (program[i]->root == "IF THEN") {}
+        else if (program[i]->root == "GOTO") {}
+        else if (program[i]->root == "END") {}
+    }
+}

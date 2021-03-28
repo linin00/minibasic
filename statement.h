@@ -19,6 +19,12 @@ public:
     virtual expression* Right(){
         return right;
     }
+    virtual QString OP(){
+        return "";
+    }
+    virtual expression* TAR(){
+        return nullptr;
+    }
 private:
     expression* left;
     expression* right;
@@ -164,6 +170,12 @@ public:
     }
     expression* Right(){
         return right;
+    }
+    QString OP(){
+        return op;
+    }
+    expression* TAR(){
+        return then;
     }
 };
 

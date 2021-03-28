@@ -9,6 +9,11 @@ minibasic::minibasic(QWidget *parent)
     , ui(new Ui::minibasic)
 {
     ui->setupUi(this);
+    /*将控件指针赋值给program的元素，方便修改显示内容*/
+    program->Code = ui->CODE;
+    program->Input = ui->INPUT;
+    program->Result = ui->RESULT;
+    program->Tree = ui->TREE;
 }
 
 minibasic::~minibasic()
@@ -44,10 +49,10 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
                 QMessageBox::warning(this, "Warning!", "Failed to open the basic program!");
             }
             else {//打开成功
-                tempStr = file.readAll();//将文件内容全部读到tempStr
                 program->clear();
-                ui -> RESULT -> setText(program->RESULT);
-                ui -> TREE -> setText(program->TREE);
+                tempStr = file.readAll();//将文件内容全部读到tempStr
+                ui -> RESULT -> clear();//清空三个窗口
+                ui -> TREE -> clear();
                 ui -> INPUT -> clear();
                 program->read_from_files(tempStr);//记录到input
                 ui -> CODE -> setText(program->input);//实时显示
@@ -58,8 +63,8 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
 void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树
 {
     program->build();
-    ui -> TREE -> setText(program->TREE);
-    ui -> RESULT -> setText(program->RESULT);
+    /*ui -> TREE -> setText(program->TREE);
+    ui -> RESULT -> setText(program->RESULT);*/
 }
 
 
