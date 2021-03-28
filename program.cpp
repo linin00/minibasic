@@ -9,7 +9,9 @@ void Program::read_from_input(QString inputStr) {
 void Program::read_from_files(QString inputStr) {
     input = inputStr;
 }
-
+void Program::readVal(QString inputStr) {
+    input_val = inputStr;
+}
 expression* Program::buildExp(QStringList inputList) {
     //if (inputList.size() == 0) abort();
     QStack<int> opOder;//优先级：加减：1；乘除：2；幂运算：3；左括号：0；右括号：4；
@@ -145,7 +147,7 @@ expression* Program::buildExp(QStringList inputList) {
     return result;
 }
 void Program::build() {
-    QStringList strList = input.split("\n");//以回车分割字符串，一行就是条指令
+    QStringList strList = input.split("\n");//
     int num = strList.size();
     statement* temp;
     for (int i = 0; i < num; i++) {//逐行生成语法树并插入语法树向量
@@ -174,6 +176,7 @@ void Program::build() {
                 break;
             }
         }
+        //program.push_back(temp);//插入语法树
     }
     run();
 }
@@ -369,19 +372,33 @@ QString Program::buildtree(int level, expression* exp) {
     return result;
 }
 void Program::run() {
-    TREE.clear();
+    Tree->clear();
     int size = program.size();
-    for (int i = 0; i < size ; i++) {//先打印到当前执行的命令
-        TREE = TREE + buildtree(i);
+    identifier.clear();
+    for (line; line < size ; line++) {//先打印到当前执行的命令
+        TREE = TREE + buildtree(line);
         Tree->setText(TREE);
-        if (program[i]->root == "REM") {
+        statement* sta = program[line];
+        if (sta->root == "REM") {
             continue;//不做任何事
         }
-        else if (program[i]->root == "LET") {}
-        else if (program[i]->root == "INPUT") {}
-        else if (program[i]->root == "PRINT") {}
-        else if (program[i]->root == "IF THEN") {}
-        else if (program[i]->root == "GOTO") {}
-        else if (program[i]->root == "END") {}
+        else if (sta->root == "LET") {//赋值
+
+            double val = *sta->Right()->value();
+            *sta->Left()->value() = val;
+        }
+        else if (sta->root == "INPUT") {//输入，从输入框获取信息
+            state = false;
+            Input->setText(sta->root + " " +  sta->Left()->show() + " " + "?\n");
+            line++;
+            idenNow = sta->Left();
+            return;
+        }
+        else if (sta->root == "PRINT") {
+
+        }
+        else if (sta->root == "IF THEN") {}
+        else if (sta->root == "GOTO") {}
+        else if (sta->root == "END") {}
     }
 }

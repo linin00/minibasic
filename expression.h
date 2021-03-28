@@ -7,36 +7,40 @@ public:
     expression(){
         left = nullptr;
         right = nullptr;
+        val = 0;
     }
     ~expression(){}
     expression* left;
     expression* right;
     QString root;
-    double value(){
-        return 0;
-    }
+    double val;
     virtual QString show() = 0;
+    virtual double* value(){
+        return &val;
+    }
 private:
 };
 
 class ConstantExp: public expression {
 public:
-    double rootVal;
+    double val;
     QString root;
     ConstantExp() {
         left = nullptr;
         right = nullptr;
-        rootVal = 0;
+        val = 0;
         root.clear();
     }
-    ConstantExp(double val) {
+    ConstantExp(double Val) {
         left = nullptr;
         right = nullptr;
-        rootVal = val;
+        val = Val;
         root = QString::number(val);
     }
     ~ConstantExp() {}
-    double value();
+    double* value() {
+        return &val;
+    }
     QString show() {
         return root;
     }
@@ -53,7 +57,9 @@ public:
         root.clear();
     }
     ~IdentifierExp() {}
-    double value();
+    double* value() {
+        return &val;
+    }
     void setRoot(QString inputStr) {
         root = inputStr;
     }
@@ -64,6 +70,7 @@ public:
 
 class CompoundExp: public expression {
 public:
+    double val;
     QString root;
     CompoundExp() {
         left = nullptr;
@@ -76,7 +83,9 @@ public:
         root = op;
     }
     ~CompoundExp() {}
-    double value();
+    double* value() {
+        return &val;
+    }
     QString show() {
         return root;
     }

@@ -24,10 +24,11 @@ minibasic::~minibasic()
 
 void minibasic::on_INPUT_textChanged()//从输入框获取命令
 {
+    if (!program->state) return;
     program->clear();
     ui -> RESULT -> setText(program->RESULT);
     ui -> TREE -> setText(program->TREE);
-    program->read_from_input(ui -> INPUT -> toPlainText());//实时读取
+    program -> read_from_input(ui -> INPUT -> toPlainText());//实时读取
     ui -> CODE -> setText(program->input);//实时显示
 }
 
@@ -62,9 +63,21 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
 }
 void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树
 {
-    program->build();
-    /*ui -> TREE -> setText(program->TREE);
-    ui -> RESULT -> setText(program->RESULT);*/
+     if (!program->state) {//需要输入时
+         QString temp = ui -> INPUT -> toPlainText();//获取
+         QString V = temp.split("\n")[1];//去掉第一行的输入提示
+         double val = V.toDouble();
+         if (QString::number(val) == V) {
+             *program->idenNow->value() = val;
+             program->idenNow = nullptr;
+             program->state = true;
+             program->run();
+         }
+         else abort();//非法输入
+     }
+     else {
+         program->build();
+     }
 }
 
 
