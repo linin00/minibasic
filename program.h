@@ -25,14 +25,16 @@ public:
     void clear();//清除
     QString buildtree(int i);//生成语法树的打印字符串
     void run();//运行语法树并生成结果的打印字符串
-    int line = 0;
-    expression* idenNow;
+    int line = 0;//执行序号
+    expression* idenNow = nullptr;//输入的变量地址
 
     QString input;//输入内容的字符串
     QString input_val;//运行时输入的值
     QString TREE;//打印的语法树
     QString RESULT;//打印的结果
-    bool state = true;
+    bool state = true;//执行状态
+
+    //四个窗口控件指针
     QTextBrowser* Code;
     QTextBrowser* Result;
     QTextBrowser* Tree;

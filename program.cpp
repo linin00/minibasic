@@ -12,15 +12,18 @@ void Program::read_from_files(QString inputStr) {
 void Program::readVal(QString inputStr) {
     input_val = inputStr;
 }
-expression* Program::buildExp(QStringList inputList) {
-    //if (inputList.size() == 0) abort();
+expression* Program::buildExp(QStringList inputList) {//生成表达式树
+
     QStack<int> opOder;//优先级：加减：1；乘除：2；幂运算：3；左括号：0；右括号：4；
     QStack<expression*> stack;//符号栈
     QStack<QString> OP;//运算符栈，什么鬼乱七八糟
-    opOder.push(0);
+    opOder.push(0);//先压一个最低优先级，避免特殊情况出现错误
+
     /*开始build*/
     expression* result = nullptr;
-    while (inputList.size()) {
+
+    while (inputList.size()) {//直到表达式元素全部读取完毕
+
         if (inputList.first() == "(") {
             OP.push(inputList.first());
             opOder.push(0);
@@ -85,7 +88,7 @@ expression* Program::buildExp(QStringList inputList) {
             }
             continue;
         }
-        else if (inputList.first() == "**") {
+        else if (inputList.first() == "**") {//右结合，需特殊处理，暂不考虑
             if (opOder.top() < 3) {//如果前一个运算符的优先级低于 **
                 OP.push(inputList.first());
                 opOder.push(3);
@@ -146,17 +149,24 @@ expression* Program::buildExp(QStringList inputList) {
     result = stack.pop();
     return result;
 }
-void Program::build() {
-    QStringList strList = input.split("\n");//
+
+void Program::build() {//构建语句树，存入语句树向量，运行run函数
+
+    QStringList strList = input.split("\n");//拆分语句
+
+    //构建语句树
     int num = strList.size();
     statement* temp;
     for (int i = 0; i < num; i++) {//逐行生成语法树并插入语法树向量
+
         if (strList[i] == "") continue;//空行跳过
         temp = build(strList[i]);//生成
+
+        //插入语法树
         int size = program.size();
-        if (size == 0) {//插入语法树
+        if (size == 0) {
             program.push_back(temp);
-            return;
+            continue;
         }
         for (int j = 0; j < size; j++) {//插入语法树，如果顺序发生变化，有可能出现变量未声明就使用的情况，暂不考虑
             if (temp->lineNum > program[j]->lineNum) {
@@ -176,19 +186,23 @@ void Program::build() {
                 break;
             }
         }
-        //program.push_back(temp);//插入语法树
     }
+    //构建完毕之后开始运行
     run();
 }
-statement* Program::build(QString inputStr) {
-    QStringList strList = inputStr.split(" ");
+statement* Program::build(QString inputStr) {//由一条语句生成语句树，并返回
+
+    QStringList strList = inputStr.split(" ");//拆分语句项
+
+    //行号处理
     int lineNum = -1;
     lineNum = strList[0].toDouble()? strList[0].toDouble() : -1;//如果是0，说明不是数字，行号记为-1，否则记录行号；
     if (lineNum != -1) {//如果有行号
         strList.removeFirst();//删除行号的字符串
     }
-    /*根据指令生成特定的语法树，递归实现，太难了*/
-    if (strList[0] == "REM") {
+
+    /*根据指令生成特定的语法树，太难了*/
+    if (strList[0] == "REM") {//头节点
         RemStmt* result = new RemStmt;
 
         //设置left
@@ -327,11 +341,13 @@ statement* Program::build(QString inputStr) {
 }
 
 void Program::clear() {
-    program.clear();
-    TREE.clear();
-    RESULT.clear();
-    input.clear();
-    identifier.clear();
+    program.clear();//清空语句树向量
+    input.clear();//清空从输入窗口读取的内容
+    identifier.clear();//清空变量储存区
+
+    TREE.clear();//清空语句树打印串
+    RESULT.clear();//清空结果打印串
+    line = 0;//重置执行序号
 }
 
 QString Program::buildtree(int i) {
