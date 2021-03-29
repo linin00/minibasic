@@ -348,6 +348,7 @@ void Program::clear() {
     TREE.clear();//清空语句树打印串
     RESULT.clear();//清空结果打印串
     line = 0;//重置执行序号
+    state = 1;
 }
 
 QString Program::buildtree(int i) {
@@ -388,9 +389,12 @@ QString Program::buildtree(int level, expression* exp) {
     return result;
 }
 void Program::run() {
-    Tree->clear();
+
     int size = program.size();
-    identifier.clear();
+    if (size == 0) return;//如果语句树为空，直接返回
+
+    //identifier.clear();
+
     for (line; line < size ; line++) {//先打印到当前执行的命令
         TREE = TREE + buildtree(line);
         Tree->setText(TREE);
@@ -411,10 +415,33 @@ void Program::run() {
             return;
         }
         else if (sta->root == "PRINT") {
-
+            RESULT = RESULT + QString::number(*sta->Left()->value()) + "\n";//将输出内容存入RESULT
+            Result->setText(RESULT);//打印
         }
         else if (sta->root == "IF THEN") {}
-        else if (sta->root == "GOTO") {}
-        else if (sta->root == "END") {}
+        else if (sta->root == "GOTO") {
+            int L = *sta->Left()->value();//读取goto目标
+
+            int _size = program.size();//设置执行行号
+            for (int i = 0; i < _size; i++) {
+                if (program[i]->lineNum == L) {
+                    line = i - 1;//减一，因为等下会加一
+                    break;
+                }
+                if (i == _size - 1) {
+                    abort();
+                }
+            }
+        }
+        else if (sta->root == "END") {
+            state = 0;//设置输入状态变量，防止输入窗口内容清除时程序以为在输入指令
+            Input->clear();//把输入窗口的东东清掉
+            state = 1;//归位是个好习惯
+            line = 0;
+            program.clear();
+            TREE.clear();
+            RESULT.clear();
+            break;
+        }
     }
 }

@@ -7,7 +7,7 @@ public:
     expression(){
         left = nullptr;
         right = nullptr;
-        val = 0;
+        val = -1;
     }
     ~expression(){}
     expression* left;

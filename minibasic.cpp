@@ -25,6 +25,7 @@ minibasic::~minibasic()
 void minibasic::on_INPUT_textChanged()//从输入框获取命令
 {
     if (!program->state) return;//输入变量值时不需要执行此函数
+
     //否则
     program->clear();//清空程序存储结构
 
@@ -75,6 +76,7 @@ void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在�
          QString temp = ui -> INPUT -> toPlainText();//捕获内容
          QString V = temp.split("\n")[1];//去掉第一行的输入提示
          double val = V.toDouble();//转换为数字
+
          if (QString::number(val) == V) {//如果输入合法
              *program->idenNow->value() = val;//将输入记录到目的地址
              program->idenNow = nullptr;//重置目标
@@ -85,12 +87,13 @@ void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在�
      }
      //运行程序
      else {
+         ui -> RESULT -> setText(program->RESULT);
          program->build();
      }
 }
 
 
-void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树
+void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树，注意先后
 {
     //清空所有存储结构
     program->clear();
