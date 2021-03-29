@@ -14,6 +14,7 @@ minibasic::minibasic(QWidget *parent)
     program->Input = ui->INPUT;
     program->Result = ui->RESULT;
     program->Tree = ui->TREE;
+
 }
 
 minibasic::~minibasic()
@@ -83,7 +84,9 @@ void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在�
              program->state = true;//切换程序状态
              program->run();//继续运行
          }
-         else abort();//非法输入
+         else {//非法输入
+             QMessageBox::warning(this, "Warning!", temp + "\n非法输入");
+         }
      }
      //运行程序
      else {

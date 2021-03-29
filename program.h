@@ -5,8 +5,8 @@
 #include "statement.h"
 #include <QVector>
 #include <QStringList>
-#include <QMainWindow>
 #include <QTextBrowser>
+#include <QMessageBox>
 class Program {
 private:
     statement* build(QString);//利用字符串，构建并返回语法树的指针

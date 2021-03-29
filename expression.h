@@ -1,6 +1,7 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 #include <QString>
+#include <QtMath>
 class expression
 {
 public:
@@ -84,6 +85,24 @@ public:
     }
     ~CompoundExp() {}
     double* value() {
+        if (root == "+") {
+            val = *left->value() + *right->value();
+        }
+        else if (root == "-"){
+            val = *left->value() - *right->value();
+        }
+        else if (root == "*"){
+            val = *left->value() * *right->value();
+        }
+        else if (root == "/"){
+            if (*right->value() == 0) abort();
+            val = *left->value() / *right->value();
+        }
+        else if (root == "**"){//暂不考虑特殊情况
+            //if (*left->value() < 0 && *right->value() < 1) abort();
+            //if (*left->value() == 0 && *right->value() == 0) abort();
+            val = pow(*left->value(), *right->value());
+        }
         return &val;
     }
     QString show() {
