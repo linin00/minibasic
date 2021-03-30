@@ -376,6 +376,14 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             }
             result->set("==", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
+        else if (list[0].contains(" != ")) {
+            QStringList exp = list[0].split(" != ");
+            if (exp.size() != 2) {//如果不能分成两个部分，报错
+                QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+                return nullptr;
+            }
+            result->set("!=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
+        }
         else {
             QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
             return nullptr;
@@ -495,6 +503,9 @@ void Program::run() {
             }
             else if (sta->OP() == "=="){
                 if (*sta->Left()->value() == *sta->Right()->value()) jmp = true;
+            }
+            else if (sta->OP() == "!="){
+                if (*sta->Left()->value() != *sta->Right()->value()) jmp = true;
             }
 
 

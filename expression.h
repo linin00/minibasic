@@ -78,7 +78,7 @@ public:
         right = nullptr;
         root.clear();
     }
-    CompoundExp(QString op, expression* le, expression* ri) {//参数处理顺序为从右到左
+    CompoundExp(QString op, expression* ri, expression* le) {//参数处理顺序为从右到左
         left = le;
         right = ri;
         root = op;
