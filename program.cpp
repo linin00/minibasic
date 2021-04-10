@@ -2,7 +2,7 @@
 #include <QStringList>
 #include <iostream>
 #include <QStack>
-#include <regex>
+#include <QRegularExpression>
 void Program::read_from_input(QString inputStr) {
     input = inputStr;
 }
@@ -159,6 +159,10 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
     return result;
 }
 
+bool isNumber(QString input) { //判断字符串是否是纯数字（非负浮点数）
+    return (input.contains(QRegularExpression("^\\d+(\\.\\d+)?$"))? true : false);
+}
+
 void Program::build() {//构建语句树，存入语句树向量，运行run函数
 
     QStringList strList = input.split("\n");//拆分语句
@@ -168,7 +172,25 @@ void Program::build() {//构建语句树，存入语句树向量，运行run函�
     statement* temp;
     for (int i = 0; i < num; i++) {//逐行生成语法树并插入语法树向量
 
-        if (strList[i] == "") continue;//空行跳过
+        if (strList[i] == "" || strList[i].contains("LIST")) continue;//空行或LIST跳过
+
+        if (isNumber(strList[i])) {//如果输入纯数字，删除指令
+            int length = program.size();
+            double a = strList[i].toDouble();
+            for(int j = 0; j < length; j++) {//尝试寻找该行号
+                if (program[j]->lineNum == a) {//如果找到了
+                    program.erase(program.begin()+j);//删除
+                    break;
+                }
+                else if (j == length - 1) {
+                    QMessageBox::warning(NULL, "Warning!", QString::number(a) + "\n要删除的行号没有找到");
+                    return;
+                    }
+
+            }
+            continue;
+        }//这一步之后不会出现空行或只有行号的指令传入build中
+
         temp = build(strList[i]);//生成
         if (temp == nullptr) {
             return;
@@ -201,23 +223,29 @@ void Program::build() {//构建语句树，存入语句树向量，运行run函�
     //构建完毕之后开始运行
     run();
 }
+
 statement* Program::build(QString inputStr) {//由一条语句生成语句树，并返回
 
-    QStringList strList = inputStr.split(" ");//拆分语句项
+    /*第一步，拆分语句项*/
+    QStringList strList = inputStr.split(" ");//用空格划分
 
-    //行号处理
+    /*第二步，行号处理*/
     int lineNum = -1;
-    lineNum = strList[0].toDouble()? strList[0].toDouble() : -1;//如果是0，说明不是数字，行号记为-1，否则记录行号；
+    if (isNumber(strList[0])) {//如果是非负数，记录行号，否则行号记为-1；
+        lineNum = strList[0].toDouble();
+    }
+
     if (lineNum != -1) {//如果有行号
         strList.removeFirst();//删除行号的字符串
     }
 
-    if (strList.size() == 0) {
-        QMessageBox::warning(NULL, "Warning!", inputStr + "\n只有行号");
-        return nullptr;
-    }
-    /*根据指令生成特定的语法树，太难了*/
+    /*第三步，根据指令生成特定的语法树，太难了*/
+    /*REM*/
     if (strList[0] == "REM") {//头节点
+        if (lineNum == -1) {
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            return nullptr;
+        }
         RemStmt* result = new RemStmt;
 
         //设置left
@@ -227,8 +255,12 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         result->lineNum = lineNum;//记录行号；
         return result;
     }
+    /*LET*/
     else if (strList[0] == "LET") {//赋值语句
-
+        if (lineNum == -1) {
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            return nullptr;
+        }
         if (strList[2] != "=") {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n赋值语句格式错误");
             return nullptr;
@@ -267,6 +299,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         return result;
 
     }
+    /*INPUT*/
     else if (strList[0] == "INPUT") {
         InputStmt* result = new InputStmt;
         if (strList.size() != 2) {
@@ -299,6 +332,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         result->lineNum = lineNum;//记录行号；
         return result;
     }
+    /*PRINT*/
     else if (strList[0] == "PRINT") {
         PrintStmt* result = new PrintStmt;
         if (strList.size() < 2) {
@@ -313,7 +347,12 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         result->lineNum = lineNum;//记录行号；
         return result;
     }
+    /*GOTO*/
     else if (strList[0] == "GOTO") {
+        if (lineNum == -1) {
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            return nullptr;
+        }
         GotoStmt* result = new GotoStmt;
         /*设置左节点*/
         strList.removeFirst();//删除GOTO
@@ -323,7 +362,12 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         result->lineNum = lineNum;//记录行号；
         return result;
     }
+    /*IF*/
     else if (strList[0] == "IF") {
+        if (lineNum == -1) {
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            return nullptr;
+        }
         IfStmt* result = new IfStmt;
 
         strList.removeFirst();//删除IF
@@ -368,13 +412,13 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             }
             result->set("<=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
-        else if (list[0].contains(" == ")) {
-            QStringList exp = list[0].split(" == ");
+        else if (list[0].contains(" = ")) {
+            QStringList exp = list[0].split(" = ");
             if (exp.size() != 2) {//如果不能分成两个部分，报错
                 QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
                 return nullptr;
             }
-            result->set("==", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
+            result->set("=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
         else if (list[0].contains(" != ")) {
             QStringList exp = list[0].split(" != ");
@@ -392,11 +436,17 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         result->lineNum = lineNum;//记录行号；
         return result;
     }
+    /*END*/
     else if (strList[0] == "END") {
+        if (lineNum == -1) {
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            return nullptr;
+        }
         EndStmt* result = new EndStmt;
         result->lineNum = lineNum;//记录行号；
         return result;
     }
+    /*不存在*/
     else {//不存在的语句
         QMessageBox::warning(NULL, "Warning!", inputStr + "\n不存在的语句");
         return nullptr;
@@ -414,7 +464,7 @@ void Program::clear() {
     state = 1;
 }
 
-QString Program::buildtree(int i) {
+QString Program::buildtree(int i) {//打印
     int size = program.size();
     if (i > size - 1) abort();
     QString result;
@@ -501,7 +551,7 @@ void Program::run() {
             else if (sta->OP() == "<="){
                 if (*sta->Left()->value() <= *sta->Right()->value()) jmp = true;
             }
-            else if (sta->OP() == "=="){
+            else if (sta->OP() == "="){
                 if (*sta->Left()->value() == *sta->Right()->value()) jmp = true;
             }
             else if (sta->OP() == "!="){

@@ -71,10 +71,14 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
         }
 }
 void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在输入变量值时判断合法性以及读取变量值
-{
-     if (!program->state) {//输入变量
+{ 
+    if (!program->state) {//输入变量
          //获取输入框内容并处理
          QString temp = ui -> INPUT -> toPlainText();//捕获内容
+         if (!temp.contains("\n")) {
+             QMessageBox::warning(this, "Warning!", temp + "\n非法输入");
+             return;
+         }
          QString V = temp.split("\n")[1];//去掉第一行的输入提示
          double val = V.toDouble();//转换为数字
 
