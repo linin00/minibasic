@@ -3,205 +3,176 @@
 #include <iostream>
 #include <QStack>
 #include <QRegularExpression>
-void Program::read_from_input(QString inputStr) {
-    input = inputStr;
+bool isNumber(QString input) { //判断字符串是否是纯数字（非负浮点数）
+    return (input.contains(QRegularExpression("^\\d+(\\.\\d+)?$"))? true : false);
 }
-void Program::read_from_files(QString inputStr) {
-    input = inputStr;
+void Program::read_from_input(QString inputStr) {
+    if (inputStr == nullptr || inputStr == "LIST")  return;//空行不处理
+    inputStr.replace(QRegularExpression("[\\s]+"), " ");
+    inputStr.remove(QRegularExpression("^ +\\s*"));
+    inputStr.remove(QRegularExpression("\\s* +$"));
+    QStringList temp = inputStr.split(" ");//空格分割
+
+    int length = code.size();
+    if (isNumber(temp[0]) && temp.size() == 1){//如果只有行号，删除指令
+        if (length == 0) {
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n程序中没有代码");
+            return;
+        }
+        double del = temp[0].toDouble();
+        for (int i = 0; i < length; i++) {
+            if (isNumber(code[i].split(" ")[0]) && del == code[i].split(" ")[0].toDouble()) {//删除对应行
+                code.erase(code.begin()+i);
+                break;
+            }
+            if (i == length - 1) {
+                QMessageBox::warning(NULL, "Warning!", inputStr + "\n在程序中不存在该行代码");
+                return;
+            }
+        }
+    }
+
+    else if (!isNumber(temp[0]) &&
+             ((temp[0] == "PRINT") ||
+             (temp[0] == "LET") ||
+             (temp[0] == "INPUT"))
+             ) {//如果没有行号，直接插入
+        code.push_back(inputStr);
+        input = input + inputStr + '\n';
+        return;
+    }
+    else if (!isNumber(temp[0]) &&
+             !((temp[0] == "PRINT") ||
+             (temp[0] == "LET") ||
+             (temp[0] == "INPUT"))
+             ) {//报错
+        QMessageBox::warning(NULL, "Warning!", inputStr + "\n缺行号或指令不存在");
+        return;
+    }
+
+    else if (length == 0) {//如果事先没有代码，直接插入
+        code.push_back(inputStr);
+        input = input + inputStr + '\n';
+        return;
+    }
+    else for (int i = length - 1; i >= 0; i--) {//插入,从后往回找，快一点
+        QStringList l1 = code[i].split(" ");
+
+        if (!isNumber(l1[0])) {//对比时遇到没有行号的报错
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n在程序中必须有行号");
+            return;
+        }
+
+        if (l1[0].toDouble() < temp[0].toDouble()) {//插在比他小的后面
+            code.insert(code.begin()+i+1, inputStr);
+            break;
+        }
+        if (l1[0].toDouble() == temp[0].toDouble()) {//行号相同时，直接替换
+            code[i] = inputStr;
+            break;
+        }
+        if (i == 0) {//所有的行号比他大时，在头部插入
+            code.insert(code.begin(), inputStr);
+            break;
+        }
+    }
+    length = code.size();
+    input.clear();
+    for (int i = 0; i < length; i++) {
+        input = input + code[i] + "\n";
+    }
+}
+void Program::read_from_files(QString Str) {
+    QStringList list = Str.split("\n");
+    int length = list.size();
+
+    for (int k = 0; k < length; k++) {
+        QString inputStr = list[k];
+        if (inputStr == nullptr || inputStr == "LIST")  continue;//空行不处理
+        inputStr.replace(QRegularExpression("[\\s]+"), " ");
+        inputStr.remove(QRegularExpression("^ +\\s*"));
+        inputStr.remove(QRegularExpression("\\s* +$"));
+        QStringList temp = inputStr.split(" ");//空格分割
+
+        int length = code.size();
+        if (isNumber(temp[0]) && temp.size() == 1){//如果只有行号，删除指令
+            if (length == 0) {
+                QMessageBox::warning(NULL, "Warning!", inputStr + "\n程序中没有代码");
+                return;
+            }
+            double del = temp[0].toDouble();
+            for (int i = 0; i < length; i++) {
+                if (isNumber(code[i].split(" ")[0]) && del == code[i].split(" ")[0].toDouble()) {//删除对应行
+                    code.erase(code.begin()+i);
+                    break;
+                }
+                if (i == length - 1) {
+                    QMessageBox::warning(NULL, "Warning!", inputStr + "\n在程序中不存在该行代码");
+                    return;
+                }
+            }
+        }
+
+        else if (!isNumber(temp[0])) {//如果没有行号，直接插入
+            code.push_back(inputStr);
+            input = input + inputStr + '\n';
+            continue;
+        }
+
+        else if (length == 0) {//如果事先没有代码，直接插入
+            code.push_back(inputStr);
+            input = input + inputStr + '\n';
+            continue;
+        }
+        else for (int i = length - 1; i >= 0; i--) {//插入,从后往回找，快一点
+            QStringList l1 = code[i].split(" ");
+
+            if (!isNumber(l1[0])) {//对比时遇到没有行号的报错
+                QMessageBox::warning(NULL, "Warning!", inputStr + "\n在程序中必须有行号");
+                return;
+            }
+
+            if (l1[0].toDouble() < temp[0].toDouble()) {//插在比他小的后面
+                code.insert(code.begin()+i+1, inputStr);
+                break;
+            }
+            if (l1[0].toDouble() == temp[0].toDouble()) {//行号相同时，直接替换
+                code[i] = inputStr;
+                break;
+            }
+            if (i == 0) {//所有的行号比他大时，在头部插入
+                code.insert(code.begin(), inputStr);
+                break;
+            }
+        }
+    }
+    length = code.size();
+    input.clear();
+    for (int i = 0; i < length; i++) {
+        input = input + code[i] + "\n";
+    }
 }
 void Program::readVal(QString inputStr) {
     input_val = inputStr;
 }
-expression* Program::buildExp(QStringList inputList) {//生成表达式树
-
-    QStack<int> opOder;//优先级：加减：1；乘除：2；幂运算：3；左括号：0；右括号：4；
-    QStack<expression*> stack;//符号栈
-    QStack<QString> OP;//运算符栈，什么鬼乱七八糟
-    opOder.push(0);//先压一个最低优先级，避免特殊情况出现错误
-    QStringList inputList_cp = inputList;
-    /*开始build*/
-    expression* result = nullptr;
-
-    while (inputList.size()) {//直到表达式元素全部读取完毕
-
-        if (inputList.first() == "(") {
-            OP.push(inputList.first());
-            opOder.push(0);
-            inputList.removeFirst();
-        }
-        else if (inputList.first() == "+") {
-            if (opOder.top() < 1) {//如果前一个运算符的优先级低于 +
-                OP.push(inputList.first());//将+加到栈中
-                opOder.push(1);
-                inputList.removeFirst();
-                continue;
-            }
-            /*否则*/
-            while (opOder.top() >= 1) {
-                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
-                stack.push(temp);//压入构建的节点
-                opOder.pop();//弹出一个运算符的同时弹出其优先级
-            }//预示下面会出现大量重复代码。。。
-        }
-        else if (inputList.first() == "-") {
-            if (opOder.top() < 1) {//如果前一个运算符的优先级低于 -
-                OP.push(inputList.first());
-                opOder.push(1);
-                inputList.removeFirst();
-                continue;
-            }
-            /*否则*/
-            while (opOder.top() >= 1) {
-                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
-                stack.push(temp);//压入构建的节点
-                opOder.pop();//弹出一个运算符的同时弹出其优先级
-            }
-            continue;
-        }
-        else if (inputList.first() == "*") {
-            if (opOder.top() < 2) {//如果前一个运算符的优先级低于 *
-                OP.push(inputList.first());
-                opOder.push(2);
-                inputList.removeFirst();
-                continue;
-            }
-            /*否则*/
-            while (opOder.top() >= 2) {
-                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
-                stack.push(temp);//压入构建的节点
-                opOder.pop();//弹出一个运算符的同时弹出其优先级
-            }
-            continue;
-        }
-        else if (inputList.first() == "/") {
-            if (opOder.top() < 2) {//如果前一个运算符的优先级低于 /
-                OP.push(inputList.first());
-                opOder.push(2);
-                inputList.removeFirst();
-                continue;
-            }
-            /*否则*/
-            while (opOder.top() >= 2) {
-                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
-                stack.push(temp);//压入构建的节点
-                opOder.pop();//弹出一个运算符的同时弹出其优先级
-            }
-            continue;
-        }
-        else if (inputList.first() == "**") {//右结合，需特殊处理，暂不考虑
-            if (opOder.top() < 3) {//如果前一个运算符的优先级低于 **
-                OP.push(inputList.first());
-                //opOder.push(3);
-                opOder.push(1);
-                inputList.removeFirst();
-                continue;
-            }
-            /*否则,但不可能*/
-            while (opOder.top() >= 3) {
-                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
-                stack.push(temp);//压入构建的节点
-                opOder.pop();//弹出一个运算符的同时弹出其优先级
-            }
-            continue;
-        }
-        else if (inputList.first() == ")") {//如果即将压入的符号为右括号，避免类似1 + ( n ) * 3的情况发生错误
-            while (OP.top() != "(") {
-                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
-                stack.push(temp);//压入构建的节点
-                opOder.pop();//弹出一个运算符的同时弹出其优先级
-            }
-            //弹出右括号
-            inputList.removeFirst();
-            //将左括号弹出
-            OP.pop();
-            opOder.pop();
-            continue;
-        }
-        else {
-            QString temp = inputList.first();
-            double val = temp.toDouble();
-
-            if (QString::number(val) == temp) {//temp是常数
-                ConstantExp* constant = new ConstantExp(val);
-                stack.push(constant);
-                inputList.removeFirst();
-                continue;
-            }
-            //如果temp不是常数,那就是标识符
-            int size = identifier.size();
-            if (size == 0) { //不存在这个标识符，程序报错
-                QMessageBox::warning(NULL, "Warning!", temp + "\n不存在标识符");
-                return nullptr;
-            }
-            for (int i = 0; i < size; i++) {
-                if (temp == identifier[i]->root) {//找到了相同的标识符
-                    stack.push(identifier[i]);
-                    inputList.removeFirst();
-                    break;
-                }
-                else if (i == size - 1) { //不存在这个标识符，程序报错
-                    QMessageBox::warning(NULL, "Warning!", temp + "\n不存在标识符");
-                    return nullptr;
-                }
-            }
-        }
-    }
-    while (stack.size() != 1) {
-        CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
-        stack.push(temp);//压入构建的节点
-        opOder.pop();//弹出一个运算符的同时弹出其优先级
-    }
-    result = stack.pop();
-    if (opOder.size() != 1) {
-        QMessageBox::warning(NULL, "Warning!", inputList_cp.join(" ") + "\n表达式错误");
-        return nullptr;
-    }
-    return result;
-}
-
-bool isNumber(QString input) { //判断字符串是否是纯数字（非负浮点数）
-    return (input.contains(QRegularExpression("^\\d+(\\.\\d+)?$"))? true : false);
-}
-
-void Program::build() {//构建语句树，存入语句树向量，运行run函数
-
-    QStringList strList = input.split("\n");//拆分语句
-
+void Program::build() {//构建语句树，存入语句树向量
+    program.clear();//构建前先清空可能已有的语法树
     //构建语句树
-    int num = strList.size();
+    int num = code.size();
     statement* temp;
     for (int i = 0; i < num; i++) {//逐行生成语法树并插入语法树向量
-
-        if (strList[i] == "" || strList[i].contains("LIST")) continue;//空行或LIST跳过
-
-        if (isNumber(strList[i])) {//如果输入纯数字，删除指令
-            int length = program.size();
-            double a = strList[i].toDouble();
-            for(int j = 0; j < length; j++) {//尝试寻找该行号
-                if (program[j]->lineNum == a) {//如果找到了
-                    program.erase(program.begin()+j);//删除
-                    break;
-                }
-                else if (j == length - 1) {
-                    QMessageBox::warning(NULL, "Warning!", QString::number(a) + "\n要删除的行号没有找到");
-                    return;
-                    }
-
-            }
-            continue;
-        }//这一步之后不会出现空行或只有行号的指令传入build中
-
-        temp = build(strList[i]);//生成
+        temp = build(code[i]);//生成
         if (temp == nullptr) {
             return;
         }
         //插入语法树
-        int size = program.size();
+        program.push_back(temp);
+        /*int size = program.size();
         if (size == 0) {
             program.push_back(temp);
             continue;
         }
-        for (int j = 0; j < size; j++) {//插入语法树，如果顺序发生变化，有可能出现变量未声明就使用的情况，暂不考虑
+        for (int j = 0; j < size; j++) {//插入语法树
             if (temp->lineNum > program[j]->lineNum) {
                 if (j == size - 1) {
                     program.push_back(temp);
@@ -218,12 +189,9 @@ void Program::build() {//构建语句树，存入语句树向量，运行run函�
                 program[j] = temp;//替换
                 break;
             }
-        }
+        }*/
     }
-    //构建完毕之后开始运行
-    run();
 }
-
 statement* Program::build(QString inputStr) {//由一条语句生成语句树，并返回
 
     /*第一步，拆分语句项*/
@@ -452,10 +420,156 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         return nullptr;
     }
 }
+expression* Program::buildExp(QStringList inputList) {//生成表达式树
 
-void Program::clear() {
+    QStack<int> opOder;//优先级：加减：1；乘除：2；幂运算：3；左括号：0；右括号：4；
+    QStack<expression*> stack;//符号栈
+    QStack<QString> OP;//运算符栈，什么鬼乱七八糟
+    opOder.push(0);//先压一个最低优先级，避免特殊情况出现错误
+    QStringList inputList_cp = inputList;
+    /*开始build*/
+    expression* result = nullptr;
+
+    while (inputList.size()) {//直到表达式元素全部读取完毕
+
+        if (inputList.first() == "(") {
+            OP.push(inputList.first());
+            opOder.push(0);
+            inputList.removeFirst();
+        }
+        else if (inputList.first() == "+") {
+            if (opOder.top() < 1) {//如果前一个运算符的优先级低于 +
+                OP.push(inputList.first());//将+加到栈中
+                opOder.push(1);
+                inputList.removeFirst();
+                continue;
+            }
+            /*否则*/
+            while (opOder.top() >= 1) {
+                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
+                stack.push(temp);//压入构建的节点
+                opOder.pop();//弹出一个运算符的同时弹出其优先级
+            }//预示下面会出现大量重复代码。。。
+        }
+        else if (inputList.first() == "-") {
+            if (opOder.top() < 1) {//如果前一个运算符的优先级低于 -
+                OP.push(inputList.first());
+                opOder.push(1);
+                inputList.removeFirst();
+                continue;
+            }
+            /*否则*/
+            while (opOder.top() >= 1) {
+                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
+                stack.push(temp);//压入构建的节点
+                opOder.pop();//弹出一个运算符的同时弹出其优先级
+            }
+            continue;
+        }
+        else if (inputList.first() == "*") {
+            if (opOder.top() < 2) {//如果前一个运算符的优先级低于 *
+                OP.push(inputList.first());
+                opOder.push(2);
+                inputList.removeFirst();
+                continue;
+            }
+            /*否则*/
+            while (opOder.top() >= 2) {
+                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
+                stack.push(temp);//压入构建的节点
+                opOder.pop();//弹出一个运算符的同时弹出其优先级
+            }
+            continue;
+        }
+        else if (inputList.first() == "/") {
+            if (opOder.top() < 2) {//如果前一个运算符的优先级低于 /
+                OP.push(inputList.first());
+                opOder.push(2);
+                inputList.removeFirst();
+                continue;
+            }
+            /*否则*/
+            while (opOder.top() >= 2) {
+                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
+                stack.push(temp);//压入构建的节点
+                opOder.pop();//弹出一个运算符的同时弹出其优先级
+            }
+            continue;
+        }
+        else if (inputList.first() == "**") {//右结合，需特殊处理，暂不考虑
+            if (opOder.top() < 3) {//如果前一个运算符的优先级低于 **
+                OP.push(inputList.first());
+                //opOder.push(3);
+                opOder.push(1);
+                inputList.removeFirst();
+                continue;
+            }
+            /*否则,但不可能*/
+            while (opOder.top() >= 3) {
+                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
+                stack.push(temp);//压入构建的节点
+                opOder.pop();//弹出一个运算符的同时弹出其优先级
+            }
+            continue;
+        }
+        else if (inputList.first() == ")") {//如果即将压入的符号为右括号，避免类似1 + ( n ) * 3的情况发生错误
+            while (OP.top() != "(") {
+                CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
+                stack.push(temp);//压入构建的节点
+                opOder.pop();//弹出一个运算符的同时弹出其优先级
+            }
+            //弹出右括号
+            inputList.removeFirst();
+            //将左括号弹出
+            OP.pop();
+            opOder.pop();
+            continue;
+        }
+        else {
+            QString temp = inputList.first();
+            double val = temp.toDouble();
+
+            if (QString::number(val) == temp) {//temp是常数
+                ConstantExp* constant = new ConstantExp(val);
+                stack.push(constant);
+                inputList.removeFirst();
+                continue;
+            }
+            //如果temp不是常数,那就是标识符
+            int size = identifier.size();
+            if (size == 0) { //不存在这个标识符，程序报错
+                QMessageBox::warning(NULL, "Warning!", temp + "\n不存在标识符");
+                return nullptr;
+            }
+            for (int i = 0; i < size; i++) {
+                if (temp == identifier[i]->root) {//找到了相同的标识符
+                    stack.push(identifier[i]);
+                    inputList.removeFirst();
+                    break;
+                }
+                else if (i == size - 1) { //不存在这个标识符，程序报错
+                    QMessageBox::warning(NULL, "Warning!", temp + "\n不存在标识符");
+                    return nullptr;
+                }
+            }
+        }
+    }
+    while (stack.size() != 1) {
+        CompoundExp* temp = new CompoundExp(OP.pop(), stack.pop(), stack.pop());//运算符，右节点，左节点
+        stack.push(temp);//压入构建的节点
+        opOder.pop();//弹出一个运算符的同时弹出其优先级
+    }
+    result = stack.pop();
+    if (opOder.size() != 1) {
+        QMessageBox::warning(NULL, "Warning!", inputList_cp.join(" ") + "\n表达式错误");
+        return nullptr;
+    }
+    return result;
+}
+void Program::clear() {//完全初始化，但不更新窗口显示内容
     program.clear();//清空语句树向量
     input.clear();//清空从输入窗口读取的内容
+    code.clear();//清空从输入窗口读取的内容
     identifier.clear();//清空变量储存区
 
     TREE.clear();//清空语句树打印串
@@ -463,7 +577,6 @@ void Program::clear() {
     line = 0;//重置执行序号
     state = 1;
 }
-
 QString Program::buildtree(int i) {//打印
     int size = program.size();
     if (i > size - 1) abort();
@@ -485,7 +598,6 @@ QString Program::buildtree(int i) {//打印
     }
     return result;
 }
-
 QString Program::buildtree(int level, expression* exp) {
     if (exp == nullptr) return "";
     QString result;
@@ -508,7 +620,7 @@ void Program::run() {
 
     //identifier.clear();
 
-    for (line; line < size ; line++) {//先打印到当前执行的命令
+    for (; line < size ; line++) {//先打印到当前执行的命令
         TREE = TREE + buildtree(line);
         Tree->setText(TREE);
         statement* sta = program[line];
@@ -516,12 +628,11 @@ void Program::run() {
             continue;//不做任何事
         }
         else if (sta->root == "LET =") {//赋值
-
             *sta->Left()->value() = *sta->Right()->value();
         }
         else if (sta->root == "INPUT") {//输入，从输入框获取信息
             state = false;
-            Input->setText(sta->root + " " +  sta->Left()->show() + " " + "?\n");
+            Input->setText("? ");
             line++;
             idenNow = sta->Left();
             return;
@@ -589,14 +700,12 @@ void Program::run() {
             }
         }
         else if (sta->root == "END") {
-            state = 0;//设置输入状态变量，防止输入窗口内容清除时程序以为在输入指令
-            Input->clear();//把输入窗口的东东清掉
-            state = 1;//归位是个好习惯
-            line = 0;
-            program.clear();
-            TREE.clear();
-            RESULT.clear();
             break;
         }
     }
+    Input->clear();//把输入窗口的东东清掉
+    state = 1;//归位是个好习惯
+    line = 0;
+    TREE.clear();
+    RESULT.clear();
 }

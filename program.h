@@ -7,6 +7,7 @@
 #include <QStringList>
 #include <QTextBrowser>
 #include <QMessageBox>
+#include <QLineEdit>
 class Program {
 private:
     statement* build(QString);//利用字符串，构建并返回语法树的指针
@@ -29,6 +30,7 @@ public:
     expression* idenNow = nullptr;//输入的变量地址
 
     QString input;//输入内容的字符串
+    QStringList code;
     QString input_val;//运行时输入的值
     QString TREE;//打印的语法树
     QString RESULT;//打印的结果
@@ -38,6 +40,6 @@ public:
     QTextBrowser* Code;
     QTextBrowser* Result;
     QTextBrowser* Tree;
-    QTextEdit* Input;
+    QLineEdit* Input;
 };
 #endif // EXECUTIONTREE_H

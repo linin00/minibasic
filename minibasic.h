@@ -15,13 +15,15 @@ public:
     minibasic(QWidget *parent = nullptr); //构造函数
     ~minibasic();//析构函数
 private slots:
-    void on_INPUT_textChanged();//槽函数
+    //槽函数
 
     void on_LOAD_clicked();
 
     void on_RUN_clicked();
 
     void on_CLEAR_clicked();
+
+    void on_INPUT_returnPressed();
 
 private:
     Program *program = new Program;//语法树

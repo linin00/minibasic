@@ -1,8 +1,7 @@
-10 REM Program to test minibasuc
+10 REM Program to test minibasic
 20 INPUT n1
 30 INPUT n2
 31 INPUT n3
 40 LET total = n1 + n2
 50 PRINT total
-55 IF ( n1 + n2 * n3 ) / 2 == total THEN 20
 60 END
