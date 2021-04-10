@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>823</height>
+    <height>723</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,6 +23,7 @@ Available at: https://github.com/GTRONICK/QSS/blob/master/ManjaroMix.qss
 */
 QMainWindow {
 	background-color:#151a1e;
+	border-radius:15px
 }
 QCalendar {
 	background-color: #151a1e;
@@ -666,7 +667,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true"/>
+     <string notr="true">border-radius:15px</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
@@ -681,6 +682,9 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
       <height>231</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius:15px</string>
+    </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
     </property>
@@ -694,6 +698,9 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
       <height>231</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 15px</string>
+    </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
     </property>
@@ -702,10 +709,13 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>620</y>
+      <y>640</y>
       <width>741</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius : 15px</string>
     </property>
    </widget>
   </widget>
