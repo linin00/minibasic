@@ -35,6 +35,9 @@ public:
     QString TREE;//打印的语法树
     QString RESULT;//打印的结果
     bool state = true;//执行状态
+    bool inputFF = false;//输入状态
+    bool error = false;//构建是否出错
+    QStringList file;
 
     //四个窗口控件指针
     QTextBrowser* Code;

@@ -56,11 +56,15 @@ void minibasic::on_INPUT_returnPressed()
     //清空两个窗口
     ui -> RESULT -> clear();
     ui -> TREE -> clear();
-
     program -> read_from_input(ui -> INPUT ->text());//实时读取
     ui -> CODE -> setText(program->input);//实时显示
     ui -> INPUT -> clear();
-    program->build();
+
+    if (program->inputFF && !program->file.empty()) {//如果现在在读文件而且没读完
+        ui->INPUT->setText(program->file[0]);
+        program->file.pop_front();
+    }
+    else if (program->inputFF && !program->file.empty()) program->inputFF = false;
 }
 void minibasic::on_LOAD_clicked()//从文件读取命令
 {
@@ -68,7 +72,7 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
             this,
             tr("选择basic程序文件"),
             "/",
-            tr("basic(*.basic)"));
+            tr("basic(*)"));
     if (fileName.isEmpty()) {//如果没有这个文件
             QMessageBox::warning(this, "警告!", "没有找到文件");
         }
@@ -89,11 +93,9 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
 
                 tempStr = file.readAll();//读取文件内容
                 program->read_from_files(tempStr);//记录到input
-
             }
+
             file.close();//关闭文件
-            ui -> CODE -> setText(program->input);//实时显示
-            program->build();
         }
 }
 void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在输入变量值时判断合法性以及读取变量值

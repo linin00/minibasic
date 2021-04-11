@@ -6,11 +6,35 @@
 bool isNumber(QString input) { //判断字符串是否是纯数字（非负浮点数）
     return (input.contains(QRegularExpression("^\\d+(\\.\\d+)?$"))? true : false);
 }
+void replace(QString& str) {//补空格
+    if (str == "" || str == nullptr) return;
+    //运算符替换
+    str.replace("+", " + ");
+    //str.replace("-", " - ");
+    //str.replace("*", " * ");
+    str.replace("/", " / ");
+    str.replace("**", " ** ");
+
+    //括号替换
+    str.replace(")", " ) ");
+    str.replace("(", " ( ");
+
+    //逻辑运算符替换
+    //str.replace("=", " = ");
+    //str.replace(">", " > ");
+    //str.replace("<", " < ");
+    str.replace(">=", " >= ");
+    str.replace("<=", " <= ");
+
+    //数字的处理
+}
 void Program::read_from_input(QString inputStr) {
+    int p = 0;
     if (inputStr == nullptr || inputStr == "LIST")  return;//空行不处理
-    inputStr.replace(QRegularExpression("[\\s]+"), " ");
-    inputStr.remove(QRegularExpression("^ +\\s*"));
-    inputStr.remove(QRegularExpression("\\s* +$"));
+    replace(inputStr);
+    inputStr.replace(QRegularExpression("[\\s]+"), " ");//合并空格
+    inputStr.remove(QRegularExpression("^ +\\s*"));//去头
+    inputStr.remove(QRegularExpression("\\s* +$"));//去尾
     QStringList temp = inputStr.split(" ");//空格分割
 
     int length = code.size();
@@ -38,8 +62,7 @@ void Program::read_from_input(QString inputStr) {
              (temp[0] == "INPUT"))
              ) {//如果没有行号，直接插入
         code.push_back(inputStr);
-        input = input + inputStr + '\n';
-        return;
+        p = code.size() - 1;
     }
     else if (!isNumber(temp[0]) &&
              !((temp[0] == "PRINT") ||
@@ -52,8 +75,7 @@ void Program::read_from_input(QString inputStr) {
 
     else if (length == 0) {//如果事先没有代码，直接插入
         code.push_back(inputStr);
-        input = input + inputStr + '\n';
-        return;
+        p = code.size() - 1;
     }
     else for (int i = length - 1; i >= 0; i--) {//插入,从后往回找，快一点
         QStringList l1 = code[i].split(" ");
@@ -65,16 +87,24 @@ void Program::read_from_input(QString inputStr) {
 
         if (l1[0].toDouble() < temp[0].toDouble()) {//插在比他小的后面
             code.insert(code.begin()+i+1, inputStr);
+            p = i + 1;
             break;
         }
         if (l1[0].toDouble() == temp[0].toDouble()) {//行号相同时，直接替换
             code[i] = inputStr;
+            p = i;
             break;
         }
         if (i == 0) {//所有的行号比他大时，在头部插入
             code.insert(code.begin(), inputStr);
+            p = 0;
             break;
         }
+    }
+    build();//构建
+    if (error) {
+        code.erase(code.begin() + p);
+        error = false;
     }
     length = code.size();
     input.clear();
@@ -83,80 +113,17 @@ void Program::read_from_input(QString inputStr) {
     }
 }
 void Program::read_from_files(QString Str) {
-    QStringList list = Str.split("\n");
-    int length = list.size();
-
-    for (int k = 0; k < length; k++) {
-        QString inputStr = list[k];
-        if (inputStr == nullptr || inputStr == "LIST")  continue;//空行不处理
-        inputStr.replace(QRegularExpression("[\\s]+"), " ");
-        inputStr.remove(QRegularExpression("^ +\\s*"));
-        inputStr.remove(QRegularExpression("\\s* +$"));
-        QStringList temp = inputStr.split(" ");//空格分割
-
-        int length = code.size();
-        if (isNumber(temp[0]) && temp.size() == 1){//如果只有行号，删除指令
-            if (length == 0) {
-                QMessageBox::warning(NULL, "Warning!", inputStr + "\n程序中没有代码");
-                return;
-            }
-            double del = temp[0].toDouble();
-            for (int i = 0; i < length; i++) {
-                if (isNumber(code[i].split(" ")[0]) && del == code[i].split(" ")[0].toDouble()) {//删除对应行
-                    code.erase(code.begin()+i);
-                    break;
-                }
-                if (i == length - 1) {
-                    QMessageBox::warning(NULL, "Warning!", inputStr + "\n在程序中不存在该行代码");
-                    return;
-                }
-            }
-        }
-
-        else if (!isNumber(temp[0])) {//如果没有行号，直接插入
-            code.push_back(inputStr);
-            input = input + inputStr + '\n';
-            continue;
-        }
-
-        else if (length == 0) {//如果事先没有代码，直接插入
-            code.push_back(inputStr);
-            input = input + inputStr + '\n';
-            continue;
-        }
-        else for (int i = length - 1; i >= 0; i--) {//插入,从后往回找，快一点
-            QStringList l1 = code[i].split(" ");
-
-            if (!isNumber(l1[0])) {//对比时遇到没有行号的报错
-                QMessageBox::warning(NULL, "Warning!", inputStr + "\n在程序中必须有行号");
-                return;
-            }
-
-            if (l1[0].toDouble() < temp[0].toDouble()) {//插在比他小的后面
-                code.insert(code.begin()+i+1, inputStr);
-                break;
-            }
-            if (l1[0].toDouble() == temp[0].toDouble()) {//行号相同时，直接替换
-                code[i] = inputStr;
-                break;
-            }
-            if (i == 0) {//所有的行号比他大时，在头部插入
-                code.insert(code.begin(), inputStr);
-                break;
-            }
-        }
-    }
-    length = code.size();
-    input.clear();
-    for (int i = 0; i < length; i++) {
-        input = input + code[i] + "\n";
-    }
+    file = Str.split("\n");
+    Input -> setText(file[0]);
+    file.pop_front();
+    inputFF = true;
 }
 void Program::readVal(QString inputStr) {
     input_val = inputStr;
 }
 void Program::build() {//构建语句树，存入语句树向量
     program.clear();//构建前先清空可能已有的语法树
+    identifier.clear();//构建前先清空可能已有的变量
     //构建语句树
     int num = code.size();
     statement* temp;
@@ -167,29 +134,6 @@ void Program::build() {//构建语句树，存入语句树向量
         }
         //插入语法树
         program.push_back(temp);
-        /*int size = program.size();
-        if (size == 0) {
-            program.push_back(temp);
-            continue;
-        }
-        for (int j = 0; j < size; j++) {//插入语法树
-            if (temp->lineNum > program[j]->lineNum) {
-                if (j == size - 1) {
-                    program.push_back(temp);
-                    break;
-                }
-                continue;
-            }
-            else if (temp->lineNum < program[j]->lineNum) {
-                program.insert(j, temp);
-                break;
-            }
-            else if (temp->lineNum == program[j]->lineNum) {//命令替换，需要将这条命令声明的对象一并清除，太难了太难了，先不实现这个
-                //statement* temp2 = program[j];//指令指针
-                program[j] = temp;//替换
-                break;
-            }
-        }*/
     }
 }
 statement* Program::build(QString inputStr) {//由一条语句生成语句树，并返回
@@ -212,6 +156,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     if (strList[0] == "REM") {//头节点
         if (lineNum == -1) {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            error = true;
             return nullptr;
         }
         RemStmt* result = new RemStmt;
@@ -227,15 +172,22 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     else if (strList[0] == "LET") {//赋值语句
         if (lineNum == -1) {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            error = true;
             return nullptr;
         }
         if (strList[2] != "=") {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n赋值语句格式错误");
+            error = true;
             return nullptr;
         }
         LetStmt* result = new LetStmt;
         IdentifierExp* iden = nullptr;//处理左节点
         int size = identifier.size();
+        if (strList[1].contains(QRegularExpression("^[\\-\\+]?\\d*[0-9](|.\\d*[0-9]|,\\d*[0-9])?$"))) {
+            QMessageBox::warning(NULL, "Warning!", inputStr + "\n赋值语句格式错误,不能给常数赋值");
+            error = true;
+            return nullptr;
+        }
         for (int i = 0; i < size; i++) {
             if (identifier[i]->root == strList[1]) {//如果标识符已存在
                 iden = identifier[i];//取其指针
@@ -272,10 +224,16 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         InputStmt* result = new InputStmt;
         if (strList.size() != 2) {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误");
+            error = true;
             return nullptr;
         }
 
         //设置left
+        if (strList[1].contains(QRegularExpression("^[\\-\\+]?\\d*[0-9](|.\\d*[0-9]|,\\d*[0-9])?$"))) {
+        QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误,不能给常数赋值");
+        error = true;
+        return nullptr;
+    }
         int size = identifier.size();
         for (int i = 0; i < size; i++) {
             if (strList[1] == identifier[i]->root) {//存在标识符
@@ -305,6 +263,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         PrintStmt* result = new PrintStmt;
         if (strList.size() < 2) {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n打印语句格式错误");
+            error = true;
             return nullptr;
         }
         /*设置左节点*/
@@ -319,6 +278,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     else if (strList[0] == "GOTO") {
         if (lineNum == -1) {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            error = true;
             return nullptr;
         }
         GotoStmt* result = new GotoStmt;
@@ -334,6 +294,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     else if (strList[0] == "IF") {
         if (lineNum == -1) {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            error = true;
             return nullptr;
         }
         IfStmt* result = new IfStmt;
@@ -343,15 +304,16 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         QStringList list = temp.split(" THEN ");//再分割。。
         if (list.size() != 2) {//如果不能分成两部分，报错
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n条件语句格式错误");
+            error = true;
             return nullptr;
         }
         expression* tar = buildExp(list[1].split(" "));//生成目标表达式
-
         //构建条件表达式
         if (list[0].contains(" > ")) {//判断是否含有逻辑运算符
             QStringList exp = list[0].split(" > ");
             if (exp.size() != 2) {//如果不能分成两个部分，报错
                 QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+                error = true;
                 return nullptr;
             }
             result->set(">", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
@@ -360,6 +322,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             QStringList exp = list[0].split(" >= ");
             if (exp.size() != 2) {//如果不能分成两个部分，报错
                 QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+                error = true;
                 return nullptr;
             }
             result->set(">=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
@@ -368,6 +331,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             QStringList exp = list[0].split(" < ");
             if (exp.size() != 2) {//如果不能分成两个部分，报错
                 QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+                error = true;
                 return nullptr;
             }
             result->set("<", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
@@ -376,6 +340,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             QStringList exp = list[0].split(" <= ");
             if (exp.size() != 2) {//如果不能分成两个部分，报错
                 QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+                error = true;
                 return nullptr;
             }
             result->set("<=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
@@ -384,6 +349,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             QStringList exp = list[0].split(" = ");
             if (exp.size() != 2) {//如果不能分成两个部分，报错
                 QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+                error = true;
                 return nullptr;
             }
             result->set("=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
@@ -392,12 +358,14 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             QStringList exp = list[0].split(" != ");
             if (exp.size() != 2) {//如果不能分成两个部分，报错
                 QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+                error = true;
                 return nullptr;
             }
             result->set("!=", tar, buildExp(exp[0].split(" ")), buildExp(exp[1].split(" ")));
         }
         else {
             QMessageBox::warning(NULL, "Warning!", list[0] + "\n条件表达式格式错误");
+            error = true;
             return nullptr;
         };
         if (result -> Left() == nullptr || result -> Right() == nullptr ) return nullptr;
@@ -408,6 +376,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     else if (strList[0] == "END") {
         if (lineNum == -1) {
             QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
+            error = true;
             return nullptr;
         }
         EndStmt* result = new EndStmt;
@@ -417,6 +386,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     /*不存在*/
     else {//不存在的语句
         QMessageBox::warning(NULL, "Warning!", inputStr + "\n不存在的语句");
+        error = true;
         return nullptr;
     }
 }
@@ -539,6 +509,7 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
             int size = identifier.size();
             if (size == 0) { //不存在这个标识符，程序报错
                 QMessageBox::warning(NULL, "Warning!", temp + "\n不存在标识符");
+                error = true;
                 return nullptr;
             }
             for (int i = 0; i < size; i++) {
@@ -549,6 +520,7 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
                 }
                 else if (i == size - 1) { //不存在这个标识符，程序报错
                     QMessageBox::warning(NULL, "Warning!", temp + "\n不存在标识符");
+                    error = true;
                     return nullptr;
                 }
             }
@@ -562,6 +534,7 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
     result = stack.pop();
     if (opOder.size() != 1) {
         QMessageBox::warning(NULL, "Warning!", inputList_cp.join(" ") + "\n表达式错误");
+        error = true;
         return nullptr;
     }
     return result;
@@ -582,6 +555,7 @@ QString Program::buildtree(int i) {//打印
     if (i > size - 1) abort();
     QString result;
     //处理指令树后返回
+    if (program[i]->lineNum != -1)
     result = result + QString::number(program[i]->lineNum);//行号
     result = result + " ";
     result = result + program[i]->root;////////
