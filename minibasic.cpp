@@ -41,7 +41,7 @@ void minibasic::on_INPUT_returnPressed()
          double val = V.toDouble();//转换为数字
 
          if (QString::number(val) == V) {//如果输入合法
-             *program->idenNow->value() = val;//将输入记录到目的地址
+             *program->idenNow->setvalue() = val;//将输入记录到目的地址
              program->idenNow = nullptr;//重置目标
              program->state = true;//切换程序状态
              program->run();//继续运行
@@ -104,7 +104,7 @@ void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在�
      //运行程序
      ui -> TREE -> clear();//在多次连续运行时可以清空语法树窗口
      ui -> RESULT -> clear();//在多次连续运行时可以清空结果窗口
-     ui -> INPUT -> clear();//在多次连续运行时可以清空结果窗口
+     //ui -> INPUT -> clear();//在多次连续运行时可以清空窗口
      program->run();
 }
 void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树，注意先后

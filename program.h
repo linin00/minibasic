@@ -26,6 +26,7 @@ public:
     void clear();//清除
     QString buildtree(int i);//生成语法树的打印字符串
     void run();//运行语法树并生成结果的打印字符串
+    void RUN();//运行语法树并生成结果的打印字符串
     int line = 0;//执行序号
     expression* idenNow = nullptr;//输入的变量地址
 
