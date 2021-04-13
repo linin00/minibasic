@@ -11,20 +11,20 @@ void replace(QString& str) {//补空格
     //运算符替换
     str.replace("+", " + ");
     //str.replace("-", " - ");
-    //str.replace("*", " * ");
+    str.replace("*", " * ");
     str.replace("/", " / ");
-    str.replace("**", " ** ");
+    str.replace(" *  * ", " ** ");
 
     //括号替换
     str.replace(")", " ) ");
     str.replace("(", " ( ");
 
     //逻辑运算符替换
-    //str.replace("=", " = ");
-    //str.replace(">", " > ");
-    //str.replace("<", " < ");
-    str.replace(">=", " >= ");
-    str.replace("<=", " <= ");
+    str.replace("=", " = ");
+    str.replace(">", " > ");
+    str.replace("<", " < ");
+    str.replace(" >  = ", " >= ");
+    str.replace(" <  = ", " <= ");
 
     //数字的处理
 }
