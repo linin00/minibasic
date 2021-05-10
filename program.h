@@ -8,6 +8,7 @@
 #include <QTextBrowser>
 #include <QMessageBox>
 #include <QLineEdit>
+#include <QPushButton>
 class Program {
 private:
     statement* build(QString);//利用字符串，构建并返回可执行语句树的指针
@@ -24,9 +25,11 @@ public:
     void clear();//清除
     void highlight();//高亮
     void showIdent();
+    void identityoff();//变量假死
     QString buildtree(int i);//生成语法树的打印字符串
     void run();//运行语法树并生成结果的打印字符串
     void RUN();//运行语法树并生成结果的打印字符串
+    void Debug();//运行语法树并生成结果的打印字符串
 private:
     QVector<IdentifierExp*> identifier;//存储标识符的向量
     QVector<statement*> program;//存储可执行语句树的向量
@@ -36,18 +39,22 @@ public:
     bool state = true;//执行状态
     bool inputFF = false;//输入状态
     bool error = false;//构建是否出错
+    bool debug = false;
     QString input;//用于显示的字符串
     QStringList code;//解析后的代码表
     QString TREE;//打印的语法树
     QString RESULT;//打印的结果
     QStringList file;//从文件获取的代码表
-    QList<int> highlight_pos;//高亮定位
+    QList<int> highlight_pos_err;//高亮定位_红
+    int highlight_pos_now = -1;//高亮定位_绿
     //四个窗口控件指针
     QTextBrowser* Code;
     QTextBrowser* Result;
     QTextBrowser* Tree;
     QTextBrowser* Ident;
     QLineEdit* Input;
+    QPushButton* Load;
+    QPushButton* Clear;
 
     expression* idenNow = nullptr;//输入的变量地址
 

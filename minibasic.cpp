@@ -14,6 +14,8 @@ minibasic::minibasic(QWidget *parent): QMainWindow(parent), ui(new Ui::minibasic
     program->Result = ui->RESULT;
     program->Tree = ui->TREE;
     program->Ident = ui->IDENT;
+    program->Clear = ui->CLEAR;
+    program->Load = ui->LOAD;
 
 }
 minibasic::~minibasic()
@@ -38,7 +40,9 @@ void minibasic::on_INPUT_returnPressed()
              *program->idenNow->setvalue() = val;//将输入记录到目的地址
              program->idenNow = nullptr;//重置目标
              program->state = true;//切换程序状态
-             program->run();//继续运行
+
+             if (program->debug) program->Debug();
+             else program->run();//继续运行
          }
          //非法输入
          else {
@@ -102,6 +106,7 @@ void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在�
 { 
      if (!program->state) return;
      //运行程序
+     if (!program->debug) program->TREE.clear();
      ui -> TREE -> clear();//在多次连续运行时可以清空语法树窗口
      ui -> RESULT -> clear();//在多次连续运行时可以清空结果窗口
      ui -> IDENT -> clear();//在多次连续运行时可以清空变量窗口
@@ -117,10 +122,31 @@ void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树，�
     ui -> RESULT -> clear();
     ui -> TREE -> clear();
     ui -> INPUT -> clear();
+    ui -> IDENT -> clear();
 }
-
-
 void minibasic::on_Debug_clicked()
 {
-
+    if (!program->state || !program->code.size()) return;
+    if (program->debug && program->line == 0) {
+        QMessageBox::information(this,"结束","被调试的程序正常结束");
+        ui->LOAD->setEnabled(true);
+        ui->CLEAR->setEnabled(true);
+        program->debug = false;
+        program->highlight_pos_now = -1;
+        program->highlight();
+        return;
+    }
+    if (!program->debug) {
+        ui->LOAD->setEnabled(false);
+        ui->CLEAR->setEnabled(false);
+        program->TREE.clear();
+        program->RESULT.clear();
+        ui->IDENT->clear();
+        ui->RESULT->clear();
+        program->debug = true;
+    }
+    program->Debug();
+    if (program->line == 0) {
+        program->identityoff();
+    }
 }

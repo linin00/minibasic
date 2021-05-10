@@ -30,12 +30,10 @@ void replace(QString& str) {//补空格
     str.replace("<", " < ");
     str.replace(" >  = ", " >= ");
     str.replace(" <  = ", " <= ");
-
-    //数字的处理
 }
 void Program::read_from_input(QString inputStr) {
     numOfError = 0;
-    highlight_pos.clear();
+    highlight_pos_err.clear();
 
     int p = 0;
     if (inputStr == nullptr || inputStr == "LIST")  return;//空行不处理
@@ -136,6 +134,7 @@ void Program::read_from_files(QString Str) {
 }
 void Program::build() {//构建语句树，存入语句树向量
     program.clear();//构建前先清空可能已有的语法树
+    identifier.clear();
     //构建语句树
     int num = code.size();
     statement* temp = nullptr;
@@ -149,7 +148,7 @@ void Program::build() {//构建语句树，存入语句树向量
                 pos++;
             }
             pos+=code[i].size();
-            highlight_pos.append(pos);//记录错误位置
+            highlight_pos_err.append(pos);//记录错误位置
         }
         //插入语法树
         program.push_back(temp);
@@ -615,8 +614,12 @@ void Program::showIdent(){
     Ident->setText(iden);
 }
 void Program::run() {
+    if (debug) {
+        highlight_pos_now = -1;
+        highlight();
+        debug = false;
+    }
     if (numOfError != 0) return;//如果有错，不运行
-    TREE.clear();//运行前清空打印的语法树
     RESULT.clear();//运行前清空运算结果
     int size = program.size();
     if (size == 0) return;//如果语句树为空，直接返回
@@ -719,6 +722,122 @@ void Program::run() {
     state = 1;//归位是个好习惯
     line = 0;
     showIdent();
+    if (!debug){
+        Load->setEnabled(true);
+        Clear->setEnabled(true);
+    }
+    identityoff();
+}
+void Program::Debug() {
+    int size = program.size();
+    if (size == 0) return;//如果语句树为空，直接返回
+    highlight_pos_now = 0;
+    for (int j = 0; j < line; j++) {
+        highlight_pos_now += code[j].size() + 1;
+    }
+    highlight_pos_now += code[line].size();
+    highlight();
+    //先打印到当前执行的命令
+    if (program[line]->lineNum != -1){//如果没有行号，不增加语法树
+        //TREE = TREE + buildtree(line);
+        TREE = buildtree(line);
+    }
+    Tree->setText(TREE);
+
+    statement* sta = program[line];
+
+    if (sta->root == "REM") {
+        //不做任何事
+    }
+    else if (sta->root == "LET =") {//赋值
+
+        sta->Left()->turn_on();//声明变量
+
+        *sta->Left()->setvalue() = *sta->Right()->value();
+        qDebug() << sta->Left();
+    }
+    else if (sta->root == "INPUT") {//输入，从输入框获取信息
+        sta->Left()->turn_on();//声明变量
+        state = false;
+        Input->setText("? ");
+        line++;
+        idenNow = sta->Left();
+        return;
+    }
+    else if (sta->root == "PRINT") {
+
+        RESULT = RESULT + QString::number(*sta->Left()->value()) + "\n";//将输出内容存入RESULT
+        qDebug() << sta->Left();
+        Result->setText(RESULT);//打印
+    }
+    else if (sta->root == "IF THEN") {
+        double L = *sta->TAR()->value();
+        if (L - int(L) != 0) {
+            QMessageBox::warning(NULL, "Warning!", "THEN " + QString::number(L) + "\n不存在目标行号");
+            return;//停止运行
+        }
+
+        //判断条件是否成立
+        bool jmp = false;
+        if (sta->OP() == ">"){
+            if (*sta->Left()->value() > *sta->Right()->value()) jmp = true;
+        }
+        else if (sta->OP() == ">="){
+            if (*sta->Left()->value() >= *sta->Right()->value()) jmp = true;
+        }
+        else if (sta->OP() == "<"){
+            if (*sta->Left()->value() < *sta->Right()->value()) jmp = true;
+        }
+        else if (sta->OP() == "<="){
+            if (*sta->Left()->value() <= *sta->Right()->value()) jmp = true;
+        }
+        else if (sta->OP() == "="){
+            if (*sta->Left()->value() == *sta->Right()->value()) jmp = true;
+        }
+        else if (sta->OP() == "!="){
+            if (*sta->Left()->value() != *sta->Right()->value()) jmp = true;
+        }
+
+
+        int _size = program.size();//设置执行行号
+        if (jmp)//不跳转
+        for (int i = 0; i < _size; i++) {
+            if (program[i]->lineNum == L) {
+                line = i - 1;//减一，因为等下会加一
+                break;
+            }
+            if (i == _size - 1) {
+                QMessageBox::warning(NULL, "Warning!", "THEN " + QString::number(L) + "\n不存在目标行号");
+                return;
+            }
+        }
+
+    }
+    else if (sta->root == "GOTO") {
+        int L = *sta->Left()->value();//读取goto目标
+
+        int _size = program.size();//设置执行行号
+        for (int i = 0; i < _size; i++) {
+            if (program[i]->lineNum == L) {
+                line = i - 1;
+                break;
+            }
+            if (i == _size - 1) {
+                QMessageBox::warning(NULL, "Warning!", "GOTO " + QString::number(L) + "\n不存在目标行号");
+                return;
+            }
+        }
+    }
+    else if (sta->root == "END") {
+        line = 0 -1;
+    }
+    line++;
+    showIdent();
+    if (line > size || line == 0) {
+        state = 1;//归位是个好习惯
+        line = 0;
+    }
+    Input->clear();//把输入窗口的东东清掉
 }
 void Program::RUN() {
     if (numOfError != 0) return;//如果有错，不运行
@@ -745,22 +864,21 @@ void Program::RUN() {
     else if (sta->root == "PRINT") {
         RESULT = RESULT + QString::number(*sta->Left()->value()) + "\n";//将输出内容存入RESULT
         qDebug() << sta->Left();
-        //qDebug() << *identifier[0]->setvalue();
         Result->setText(RESULT);//打印
     }
     Input->clear();//把输入窗口的东东清掉
     state = 1;//归位是个好习惯
     line = 0;
     showIdent();
+    identityoff();
 }
 void Program::clear() {//完全初始化，但不更新窗口显示内容
     input.clear();//清空从输入窗口读取的内容
     code.clear();//清空从输入窗口读取的内容
-    /*input_val.clear();*/
     program.clear();//清空语句树向量
     identifier.clear();//清空变量储存区
-    highlight_pos.clear();
-
+    highlight_pos_err.clear();
+    highlight_pos_now = -1;
     TREE.clear();//清空语句树打印串
     RESULT.clear();//清空结果打印串
     state = 1;
@@ -774,8 +892,13 @@ void Program::highlight() {
     QTextCursor cursor(Code->document());
     QList<QTextEdit::ExtraSelection> extras;
     QList<QPair<int, QColor>> highlights;
-    for (auto &line : highlight_pos) {
+
+    for (auto &line : highlight_pos_err) {
         QPair<int, QColor> temp(line, QColor(255,100,100));
+        highlights.append(temp);
+    }
+    if (highlight_pos_now != -1) {
+        QPair<int, QColor> temp(highlight_pos_now, QColor(100,255,100));
         highlights.append(temp);
     }
     for (auto &line : highlights) {
@@ -790,4 +913,10 @@ void Program::highlight() {
     }
     qDebug() << extras.size();
     Code->setExtraSelections(extras);
+}
+void Program::identityoff(){
+    int size = identifier.size();
+    for (int i = 0; i < size; i++) {
+        identifier[i]->turn_off();
+    }
 }
