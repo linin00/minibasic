@@ -23,6 +23,7 @@ public:
     void build();//逐行读取input，判断合法性，构建语句树，并根据行号存储其指针到program向量中
     void clear();//清除
     void highlight();//高亮
+    void showIdent();
     QString buildtree(int i);//生成语法树的打印字符串
     void run();//运行语法树并生成结果的打印字符串
     void RUN();//运行语法树并生成结果的打印字符串
@@ -45,6 +46,7 @@ public:
     QTextBrowser* Code;
     QTextBrowser* Result;
     QTextBrowser* Tree;
+    QTextBrowser* Ident;
     QLineEdit* Input;
 
     expression* idenNow = nullptr;//输入的变量地址

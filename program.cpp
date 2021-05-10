@@ -605,6 +605,15 @@ QString Program::buildtree(int i) {//构建单行可打印语句树，i：第i�
     }
     return result;
 }
+void Program::showIdent(){
+    int t = identifier.size();
+    QString iden;
+    for (int i = 0; i < t; i++) {
+        if (identifier[i]->DONE())
+            iden = iden + identifier[i]->root + ": " + identifier[i]->type + " = " + QString::number(*identifier[i]->setvalue()) + "\n";
+    }
+    Ident->setText(iden);
+}
 void Program::run() {
     if (numOfError != 0) return;//如果有错，不运行
     TREE.clear();//运行前清空打印的语法树
@@ -709,6 +718,7 @@ void Program::run() {
     Input->clear();//把输入窗口的东东清掉
     state = 1;//归位是个好习惯
     line = 0;
+    showIdent();
 }
 void Program::RUN() {
     if (numOfError != 0) return;//如果有错，不运行
@@ -741,6 +751,7 @@ void Program::RUN() {
     Input->clear();//把输入窗口的东东清掉
     state = 1;//归位是个好习惯
     line = 0;
+    showIdent();
 }
 void Program::clear() {//完全初始化，但不更新窗口显示内容
     input.clear();//清空从输入窗口读取的内容

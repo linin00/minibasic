@@ -66,6 +66,7 @@ private:
     double done = false;//是否已启用
 public:
     QString root;//标识符字符串（名称）
+    QString type = "DOUBLE";
     IdentifierExp() {
         left = nullptr;//左节点为空
         right = nullptr;//右节点为空
@@ -100,6 +101,9 @@ public:
     bool DONE(QString str) {
         if (done && str == root) return true;
         return false;
+    }
+    bool DONE() {
+        return done;
     }
 };
 

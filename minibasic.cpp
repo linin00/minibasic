@@ -13,6 +13,7 @@ minibasic::minibasic(QWidget *parent): QMainWindow(parent), ui(new Ui::minibasic
     program->Input = ui->INPUT;
     program->Result = ui->RESULT;
     program->Tree = ui->TREE;
+    program->Ident = ui->IDENT;
 
 }
 minibasic::~minibasic()
@@ -103,6 +104,7 @@ void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在�
      //运行程序
      ui -> TREE -> clear();//在多次连续运行时可以清空语法树窗口
      ui -> RESULT -> clear();//在多次连续运行时可以清空结果窗口
+     ui -> IDENT -> clear();//在多次连续运行时可以清空变量窗口
      program->run();
 }
 void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树，注意先后
@@ -117,3 +119,8 @@ void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树，�
     ui -> INPUT -> clear();
 }
 
+
+void minibasic::on_Debug_clicked()
+{
+
+}

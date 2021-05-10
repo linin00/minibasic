@@ -25,6 +25,8 @@ private slots:
 
     void on_INPUT_returnPressed();
 
+    void on_Debug_clicked();
+
 private:
     Program *program = new Program;//语法树
     Ui::minibasic *ui;//私有对象，不知道是什么
