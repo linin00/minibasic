@@ -8,6 +8,7 @@
 class expression
 {
 public:
+    double val;
     expression(){
         left = nullptr;
         right = nullptr;
@@ -17,7 +18,6 @@ public:
     expression* left;
     expression* right;
     QString root = "testing";
-    double val;
     virtual QString show() = 0;
     virtual double* value(){
         return &val;
@@ -33,78 +33,6 @@ public:
         return nullptr;
     }
 private:
-};
-
-class ConstantExp: public expression {
-public:
-    double val;
-    QString root;
-    ConstantExp() {
-        left = nullptr;
-        right = nullptr;
-        val = 0;
-        root.clear();
-    }
-    ConstantExp(double Val) {
-        left = nullptr;
-        right = nullptr;
-        val = Val;
-        root = QString::number(val);
-    }
-    ~ConstantExp() {}
-    double* value() {
-        return &val;
-    }
-    QString show() {
-        return root;
-    }
-};
-
-class IdentifierExp: public expression {
-private:
-    double val = 0;//标识符的值
-    double done = false;//是否已启用
-public:
-    QString root;//标识符字符串（名称）
-    QString type = "DOUBLE";
-    IdentifierExp() {
-        left = nullptr;//左节点为空
-        right = nullptr;//右节点为空
-        root.clear();
-    }
-    ~IdentifierExp() {}
-
-    double* value() {
-        if (!done) {//如果还没有声明
-            QMessageBox::warning(NULL, "Warning!", root + "\n标识符不存在");
-            //abort();
-        }
-        return &val;
-    }
-    double* setvalue() {
-        return &val;
-    }
-
-    void setRoot(QString inputStr) {
-        root = inputStr;
-    }
-    QString show() {
-        return root;
-    }
-    void turn_on() {
-        done = true;
-        qDebug() << "声明成功";
-    }
-    void turn_off() {
-        done = false;
-    }
-    bool DONE(QString str) {
-        if (done && str == root) return true;
-        return false;
-    }
-    bool DONE() {
-        return done;
-    }
 };
 
 class CompoundExp: public expression {
@@ -143,6 +71,74 @@ public:
     }
     QString show() {
         return root;
+    }
+};
+
+class ConstantExp: public expression {
+public:
+    double val;
+    QString root;
+    ConstantExp() {
+        left = nullptr;
+        right = nullptr;
+        val = 0;
+        root.clear();
+    }
+    ConstantExp(double Val) {
+        left = nullptr;
+        right = nullptr;
+        val = Val;
+        root = QString::number(val);
+    }
+    ~ConstantExp() {}
+    double* value() {
+        return &val;
+    }
+    QString show() {
+        return root;
+    }
+};
+
+class IdentifierExp: public expression {
+private:
+    double done = false;//是否已启用
+public:
+    QString root;//标识符字符串（名称）
+    QString type = "DOUBLE";
+    IdentifierExp() {
+        left = new ConstantExp;
+        right = nullptr;//右节点为空
+        root.clear();
+    }
+    ~IdentifierExp() {}
+    double* value() {
+        if (!done) {//如果还没有声明
+            QMessageBox::warning(NULL, "Warning!", root + "\n标识符不存在");
+        }
+        return &left->val;
+    }
+    double* setvalue() {
+        return &left->val;
+    }
+    void setRoot(QString inputStr) {
+        root = inputStr;
+    }
+    QString show() {
+        return root;
+    }
+    void turn_on() {
+        done = true;
+        qDebug() << "声明成功";
+    }
+    void turn_off() {
+        done = false;
+    }
+    bool DONE(QString str) {
+        if (done && str == root) return true;
+        return false;
+    }
+    bool DONE() {
+        return done;
     }
 };
 #endif // EXPRESSION_H
