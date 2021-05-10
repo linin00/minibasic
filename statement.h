@@ -122,6 +122,28 @@ public:
     }
 };
 
+class InputsStmt: public statement {//左子树是表达式（标识符），右子树是空
+private:
+    expression* left;
+    expression* right;
+public:
+    InputsStmt() {
+        root = "INPUT";
+        left = nullptr;
+        right = nullptr;
+    }
+    void setLeft(expression* le) {
+        left = le;
+    }
+    ~InputsStmt() {}
+    expression* Left(){
+        return left;
+    }
+    expression* Right(){
+        return right;
+    }
+};
+
 class GotoStmt: public statement {//左子树是表达式，右子树是空
 private:
     expression* left;

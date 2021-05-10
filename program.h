@@ -40,6 +40,7 @@ public:
     bool inputFF = false;//输入状态
     bool error = false;//构建是否出错
     bool debug = false;
+    bool single = false;
     QString input;//用于显示的字符串
     QStringList code;//解析后的代码表
     QString TREE;//打印的语法树

@@ -9,6 +9,7 @@ class expression
 {
 public:
     double val;
+    QString val_str;
     expression(){
         left = nullptr;
         right = nullptr;
@@ -18,6 +19,7 @@ public:
     expression* left;
     expression* right;
     QString root = "testing";
+    QString type = "DOUBLE";
     virtual QString show() = 0;
     virtual double* value(){
         return &val;
@@ -26,11 +28,20 @@ public:
     }
     virtual void turn_off() {
     }
-    virtual bool DONE(QString str) {
+    virtual bool DONE(QString) {
         return true;
     }
     virtual double* setvalue() {
         return nullptr;
+    }
+    virtual QString value_str() {
+        return nullptr;
+    }
+    virtual void setvalue_str(QString) {
+        return;
+    }
+    virtual void setType(QString) {
+
     }
 private:
 };
@@ -84,11 +95,19 @@ public:
         val = 0;
         root.clear();
     }
-    ConstantExp(double Val) {
+    ConstantExp(double Val) {//实数常量
+        type = "DOUBLE";
         left = nullptr;
         right = nullptr;
         val = Val;
         root = QString::number(val);
+    }
+    ConstantExp(QString Val) {//字符串常量
+        type = "STR";
+        left = nullptr;
+        right = nullptr;
+        val = -1;
+        root = Val;
     }
     ~ConstantExp() {}
     double* value() {
@@ -104,22 +123,32 @@ private:
     double done = false;//是否已启用
 public:
     QString root;//标识符字符串（名称）
-    QString type = "DOUBLE";
     IdentifierExp() {
-        left = new ConstantExp;
+        left = nullptr;
         right = nullptr;//右节点为空
         root.clear();
     }
     ~IdentifierExp() {}
+
     double* value() {
         if (!done) {//如果还没有声明
             QMessageBox::warning(NULL, "Warning!", root + "\n标识符不存在");
         }
-        return &left->val;
+        return &val;
     }
     double* setvalue() {
-        return &left->val;
+        return &val;
     }
+    QString value_str() {
+        if (!done) {//如果还没有声明
+            QMessageBox::warning(NULL, "Warning!", root + "\n标识符不存在");
+        }
+        return val_str;
+    }
+    void setvalue_str(QString val) {
+        val_str = val;
+    }
+
     void setRoot(QString inputStr) {
         root = inputStr;
     }
@@ -128,7 +157,7 @@ public:
     }
     void turn_on() {
         done = true;
-        qDebug() << "声明成功";
+        qDebug() << "声明变量" << root;
     }
     void turn_off() {
         done = false;
@@ -139,6 +168,9 @@ public:
     }
     bool DONE() {
         return done;
+    }
+    void setType(QString str) {
+        type = str;
     }
 };
 #endif // EXPRESSION_H

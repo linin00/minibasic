@@ -65,7 +65,8 @@ void Program::read_from_input(QString inputStr) {
     else if (!isNumber(temp[0]) &&
              ((temp[0] == "PRINT") ||
              (temp[0] == "LET") ||
-             (temp[0] == "INPUT"))
+             (temp[0] == "INPUT") ||
+              (temp[0] == "INPUTS"))
              ) {//如果没有行号，直接插入并运行
 
         code.push_back(inputStr);
@@ -76,17 +77,17 @@ void Program::read_from_input(QString inputStr) {
             error = false;
             return;
         }
-        int line_old = line;
         line = program.size() -1;
-        RUN();//运行,由于line已经设置为最后一行，所以只执行一句就停下来了
-        line = line_old;
+        RUN();
+        single = true;
         code.erase(code.begin() + p);//从语法树中剔除
         return;
     }
     else if (!isNumber(temp[0]) &&
              !((temp[0] == "PRINT") ||
              (temp[0] == "LET") ||
-             (temp[0] == "INPUT"))
+             (temp[0] == "INPUT") ||
+               (temp[0] == "INPUTS"))
              ) {//报错
         QMessageBox::warning(NULL, "Warning!", inputStr + "\n缺行号或指令不存在");
         return;
@@ -134,7 +135,7 @@ void Program::read_from_files(QString Str) {
 }
 void Program::build() {//构建语句树，存入语句树向量
     program.clear();//构建前先清空可能已有的语法树
-    identifier.clear();
+    //identifier.clear();
     //构建语句树
     int num = code.size();
     statement* temp = nullptr;
@@ -226,6 +227,14 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         strList.removeFirst();//删除标识符名称
         strList.removeFirst();//删除=
 
+        //对有可能是字符串的情况作特殊处理
+        QString temp = strList.join(" ");
+        if (temp.contains(QRegularExpression("^[\\\'\\\"][\\w]+[\\\'\\\"]$"))){
+            qDebug() << "匹配成功";
+            iden->type="STR";//将变量改为STR类型
+            strList.clear();
+            strList.append(temp);
+        }
         right = buildExp(strList);
         if (right == nullptr) return nullptr;
         result->setRight(right);
@@ -252,6 +261,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         int size = identifier.size();
         for (int i = 0; i < size; i++) {
             if (strList[1] == identifier[i]->root) {//存在标识符
+                identifier[i]->setType("DOUBLE");
                 result->setLeft(identifier[i]);
                 break;
             }
@@ -272,6 +282,48 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
 
         result->lineNum = lineNum;//记录行号；
         return result;
+    }
+    /*INPUT*/
+    else if (strList[0] == "INPUTS") {
+        InputsStmt* result = new InputsStmt;
+        if (strList.size() != 2) {
+            //QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误");
+            error = true;
+            return nullptr;
+        }
+
+        //设置left
+        if (strList[1].contains(QRegularExpression("^[\\-\\+]?\\d*[0-9](|.\\d*[0-9]|,\\d*[0-9])?$"))||
+                strList[1].contains(QRegularExpression("[\\+\\-\\*\\/\\>\\<\\?\\.||,\\=]"))) {
+        //QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误,不能给常数或特殊符号赋值");
+        error = true;
+        return nullptr;
+        }
+    int size = identifier.size();
+    for (int i = 0; i < size; i++) {
+        if (strList[1] == identifier[i]->root) {//存在标识符
+            result->setLeft(identifier[i]);
+            result->Left()->setType("STR");
+        }
+        if (i == size - 1) {//不存在
+            IdentifierExp* temp = new IdentifierExp;
+            temp->root = strList[1];
+            temp->type="STR";
+            result->setLeft(temp);
+            identifier.push_back(temp);
+        }
+    }
+
+    if (size == 0) {//不存在
+        IdentifierExp* temp = new IdentifierExp;
+        temp->root = strList[1];
+        temp->type="STR";
+        result->setLeft(temp);
+        identifier.push_back(temp);
+    }
+
+    result->lineNum = lineNum;//记录行号；
+    return result;
     }
     /*PRINT*/
     else if (strList[0] == "PRINT") {
@@ -523,7 +575,12 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
                 inputList.removeFirst();
                 continue;
             }
-
+            else if (temp.contains(QRegularExpression("^[\\\'\\\"][\\w]+[\\\'\\\"]$"))) {//temp 是字符串
+                ConstantExp* constant = new ConstantExp(temp);
+                stack.push(constant);
+                inputList.removeFirst();
+                continue;
+            }
             //如果temp不是常数,那就是标识符
             int size = identifier.size();
 
@@ -608,8 +665,14 @@ void Program::showIdent(){
     int t = identifier.size();
     QString iden;
     for (int i = 0; i < t; i++) {
-        if (identifier[i]->DONE())
-            iden = iden + identifier[i]->root + ": " + identifier[i]->type + " = " + QString::number(*identifier[i]->setvalue()) + "\n";
+        if (identifier[i]->DONE()){
+            if (identifier[i]->type == "DOUBLE"){
+                iden = iden + identifier[i]->root + ": " + identifier[i]->type + " = " + QString::number(*identifier[i]->value()) + "\n";
+            }
+            else if (identifier[i]->type == "STR") {
+                iden = iden + identifier[i]->root + ": " + identifier[i]->type + " = " + identifier[i]->value_str() + "\n";
+            }
+        }
     }
     Ident->setText(iden);
 }
@@ -624,12 +687,13 @@ void Program::run() {
             Load->setEnabled(true);
             Clear->setEnabled(true);
             Input->clear();//把输入窗口的东东清掉
-            state = 1;//归位是个好习惯
+            state = 1;//归位
             line = 0;
             showIdent();
         }
         return;
     }
+
     RESULT.clear();//运行前清空运算结果
     int size = program.size();
     if (size == 0) return;//如果语句树为空，直接返回
@@ -648,11 +712,22 @@ void Program::run() {
         else if (sta->root == "LET =") {//赋值
 
             sta->Left()->turn_on();//声明变量
-
-            *sta->Left()->setvalue() = *sta->Right()->value();
-            qDebug() << sta->Left();
+            if (sta->Left()->type == "DOUBLE"){
+                *sta->Left()->setvalue() = *sta->Right()->value();
+            }
+            else if (sta->Left()->type == "STR"){
+                sta->Left()->setvalue_str(sta->Right()->show());
+            }
         }
         else if (sta->root == "INPUT") {//输入，从输入框获取信息
+            sta->Left()->turn_on();//声明变量
+            state = false;
+            Input->setText("? ");
+            line++;
+            idenNow = sta->Left();
+            return;
+        }
+        else if (sta->root == "INPUTS") {//输入字符串，从输入框获取信息
             sta->Left()->turn_on();//声明变量
             state = false;
             Input->setText("? ");
@@ -729,17 +804,24 @@ void Program::run() {
     }
 
     Input->clear();//把输入窗口的东东清掉
-    state = 1;//归位是个好习惯
+    state = 1;//归位
     line = 0;
     showIdent();
     if (!debug){
         Load->setEnabled(true);
         Clear->setEnabled(true);
     }
-    identityoff();
 }
 void Program::Debug() {
     int size = program.size();
+    if (line == size) {
+        state = 1;//归位
+        line = 0;
+        qDebug() << "调试结束\n";
+        Input->clear();//把输入窗口的东东清掉
+        showIdent();
+        return;
+    }
     if (size == 0) return;//如果语句树为空，直接返回
     highlight_pos_now = 0;
     for (int j = 0; j < line; j++) {
@@ -755,18 +837,28 @@ void Program::Debug() {
     Tree->setText(TREE);
 
     statement* sta = program[line];
-
     if (sta->root == "REM") {
         //不做任何事
     }
     else if (sta->root == "LET =") {//赋值
 
         sta->Left()->turn_on();//声明变量
-
-        *sta->Left()->setvalue() = *sta->Right()->value();
-        qDebug() << sta->Left();
+        if (sta->Left()->type == "DOUBLE"){
+            *sta->Left()->setvalue() = *sta->Right()->value();
+        }
+        else if (sta->Left()->type == "STR"){
+            sta->Left()->setvalue_str(sta->Right()->show());
+        }
     }
     else if (sta->root == "INPUT") {//输入，从输入框获取信息
+        sta->Left()->turn_on();//声明变量
+        state = false;
+        Input->setText("? ");
+        line++;
+        idenNow = sta->Left();
+        return;
+    }
+    else if (sta->root == "INPUTS") {//输入字符串，从输入框获取信息
         sta->Left()->turn_on();//声明变量
         state = false;
         Input->setText("? ");
@@ -843,27 +935,37 @@ void Program::Debug() {
     }
     line++;
     showIdent();
-    if (line > size || line == 0) {
-        state = 1;//归位是个好习惯
+    if (line >= size || line == 0) {
+        state = 1;//归位
         line = 0;
+        qDebug() << "调试结束\n";
     }
     Input->clear();//把输入窗口的东东清掉
 }
 void Program::RUN() {
     if (numOfError != 0) return;//如果有错，不运行
-    if (program[line]->lineNum != -1){//如果没有行号，不增加语法树
-        TREE = TREE + buildtree(line);
-    }
     Tree->setText(TREE);
 
     statement* sta = program[line];
     if (sta->root == "LET =") {//赋值
 
         sta->Left()->turn_on();//声明变量
-        *sta->Left()->setvalue() = *sta->Right()->value();
-        qDebug() << sta->Left();
+        if (sta->Left()->type == "DOUBLE"){
+            *sta->Left()->setvalue() = *sta->Right()->value();
+        }
+        else if (sta->Left()->type == "STR"){
+            sta->Left()->setvalue_str(sta->Right()->show());
+        }
     }
     else if (sta->root == "INPUT") {//输入，从输入框获取信息
+        sta->Left()->turn_on();//声明变量
+        state = false;
+        Input->setText("? ");
+        line++;
+        idenNow = sta->Left();
+        return;
+    }
+    else if (sta->root == "INPUTS") {//输入字符串，从输入框获取信息
         sta->Left()->turn_on();//声明变量
         state = false;
         Input->setText("? ");
@@ -877,10 +979,9 @@ void Program::RUN() {
         Result->setText(RESULT);//打印
     }
     Input->clear();//把输入窗口的东东清掉
-    state = 1;//归位是个好习惯
+    state = 1;//归位
     line = 0;
     showIdent();
-    identityoff();
 }
 void Program::clear() {//完全初始化，但不更新窗口显示内容
     input.clear();//清空从输入窗口读取的内容

@@ -26,40 +26,59 @@ void minibasic::on_INPUT_returnPressed()
 {
     //输入变量
     if (!program->state) {
-         //获取输入框内容并处理
-         QString temp = ui -> INPUT -> text();//捕获内容
-         temp.replace(QRegularExpression("[\\s]+"), " ");
-         temp.remove(QRegularExpression("^ +\\s*"));
-         temp.remove(QRegularExpression("\\s* +$"));
-         QString V = temp.split(" ")[1];//去掉输入提示
-         V.remove(QRegularExpression("^ +\\s*"));
-         V.remove(QRegularExpression("\\s* +$"));
-         double val = V.toDouble();//转换为数字
-         //如果输入合法
-         if (QString::number(val) == V) {
-             *program->idenNow->setvalue() = val;//将输入记录到目的地址
-             program->idenNow = nullptr;//重置目标
-             program->state = true;//切换程序状态
+        qDebug() << "test";//获取输入框内容并处理
+        QString temp = ui -> INPUT -> text();//捕获内容
+        temp.replace(QRegularExpression("[\\s]+"), " ");
+        temp.remove(QRegularExpression("^ +\\s*"));
+        temp.remove(QRegularExpression("\\s* +$"));
+        QString V = temp.split(" ")[1];//去掉输入提示
+        V.remove(QRegularExpression("^ +\\s*"));
+        V.remove(QRegularExpression("\\s* +$"));
 
-             if (program->debug) program->Debug();
-             else program->run();//继续运行
+        if(program->idenNow->type == "DOUBLE"){
+             double val = V.toDouble();//转换为数字
+             //如果输入合法
+             if (QString::number(val) == V) {
+                 *program->idenNow->setvalue() = val;//将输入记录到目的地址
+             }
+             //非法输入
+             else {
+                 QMessageBox::warning(this, "Warning!", temp + "\n非法输入");
+                 return;
+             }
          }
-         //非法输入
-         else {
-             QMessageBox::warning(this, "Warning!", temp + "\n非法输入");
-         }
-         return;
+        else if (program->idenNow->type == "STR"){
+            //如果输入合法
+            if (V.contains(QRegularExpression("^[\\\'\\\"][\\w]+[\\\'\\\"]$"))) {
+                program->idenNow->setvalue_str(V);//将输入记录到目的地址
+            }
+            //非法输入
+            else {
+                QMessageBox::warning(this, "Warning!", temp + "\n非法输入");
+                return;
+            }
+        }
+        program->idenNow = nullptr;//重置目标
+        program->state = true;//切换程序状态
+        program->showIdent();
+        if (program->debug) program->Debug();
+        else program->run();//继续运行
+        return;
      }
     //否则
     //program->clear();//清空程序存储结构
     //清空两个窗口
     else {
+        if (ui->INPUT->text() == "") return;
         ui->RESULT->clear();
         ui->TREE->clear();
-        if (ui->INPUT->text() == "") return;
         program -> read_from_input(ui -> INPUT ->text());//实时读取
         ui -> CODE -> setText(program->input);//实时显示
-        ui -> INPUT -> clear();
+
+        if (!program->single) {
+            ui -> INPUT -> clear();
+        }
+        else program->single = true;
 
         if (program->inputFF && !program->file.empty()) {//如果现在在读文件而且没读完
             ui->INPUT->setText(program->file[0]);//设置下一条从文件获取的输入
@@ -137,6 +156,7 @@ void minibasic::on_Debug_clicked()
         return;
     }
     if (!program->debug) {
+        program->identityoff();
         ui->LOAD->setEnabled(false);
         ui->CLEAR->setEnabled(false);
         program->TREE.clear();
@@ -146,7 +166,7 @@ void minibasic::on_Debug_clicked()
         program->debug = true;
     }
     program->Debug();
-    if (program->line == 0) {
+    /*if (program->line == 0) {
         program->identityoff();
-    }
+    }*/
 }
