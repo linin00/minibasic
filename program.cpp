@@ -619,7 +619,17 @@ void Program::run() {
         highlight();
         debug = false;
     }
-    if (numOfError != 0) return;//如果有错，不运行
+    if (numOfError != 0) {//如果有错，不运行
+        if (!debug){
+            Load->setEnabled(true);
+            Clear->setEnabled(true);
+            Input->clear();//把输入窗口的东东清掉
+            state = 1;//归位是个好习惯
+            line = 0;
+            showIdent();
+        }
+        return;
+    }
     RESULT.clear();//运行前清空运算结果
     int size = program.size();
     if (size == 0) return;//如果语句树为空，直接返回
