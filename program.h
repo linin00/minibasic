@@ -10,11 +10,11 @@
 #include <QLineEdit>
 class Program {
 private:
-    statement* build(QString);//利用字符串，构建并返回语法树的指针
+    statement* build(QString);//利用字符串，构建并返回可执行语句树的指针
     expression* buildExp(QStringList);
     QString buildtree(int level, expression* exp);//递归
     QVector<IdentifierExp*> identifier;//存储标识符的向量
-    QVector<statement*> program;//存储语句树的向量
+    QVector<statement*> program;//存储可执行语句树的向量
 public:
     Program() {//初始化
     }
@@ -30,15 +30,15 @@ public:
     int line = 0;//执行序号
     expression* idenNow = nullptr;//输入的变量地址
 
-    QString input;//输入内容的字符串
-    QStringList code;
-    QString input_val;//运行时输入的值
+    QString input;//用于显示的字符串
+    QStringList code;//解析后的代码表
+    /*QString input_val;//运行时输入的值*/
     QString TREE;//打印的语法树
     QString RESULT;//打印的结果
     bool state = true;//执行状态
     bool inputFF = false;//输入状态
     bool error = false;//构建是否出错
-    QStringList file;
+    QStringList file;//从文件获取的代码表
 
     //四个窗口控件指针
     QTextBrowser* Code;

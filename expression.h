@@ -132,9 +132,7 @@ public:
             if (*right->value() == 0) abort();
             val = *left->value() / *right->value();
         }
-        else if (root == "**"){//暂不考虑特殊情况
-            //if (*left->value() < 0 && *right->value() < 1) abort();
-            //if (*left->value() == 0 && *right->value() == 0) abort();
+        else if (root == "**"){
             val = pow(*left->value(), *right->value());
         }
         return &val;
