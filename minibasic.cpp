@@ -51,6 +51,7 @@ void minibasic::on_INPUT_returnPressed()
     else {
         ui->RESULT->clear();
         ui->TREE->clear();
+        if (ui->INPUT->text() == "") return;
         program -> read_from_input(ui -> INPUT ->text());//实时读取
         ui -> CODE -> setText(program->input);//实时显示
         ui -> INPUT -> clear();
@@ -60,6 +61,7 @@ void minibasic::on_INPUT_returnPressed()
             program->file.pop_front();
         }
         else if (program->inputFF && !program->file.empty()) program->inputFF = false;
+        program->highlight();
         return;
     }
 }
