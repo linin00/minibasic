@@ -113,6 +113,9 @@ public:
     double* value() {
         return &val;
     }
+    QString value_str() {
+        return root;
+    }
     QString show() {
         return root;
     }

@@ -31,11 +31,12 @@ void minibasic::on_INPUT_returnPressed()
         temp.replace(QRegularExpression("[\\s]+"), " ");
         temp.remove(QRegularExpression("^ +\\s*"));
         temp.remove(QRegularExpression("\\s* +$"));
-        QString V = temp.split(" ")[1];//去掉输入提示
-        V.remove(QRegularExpression("^ +\\s*"));
-        V.remove(QRegularExpression("\\s* +$"));
 
         if(program->idenNow->type == "DOUBLE"){
+
+             QString V = temp.split(" ")[1];//去掉输入提示
+             V.remove(QRegularExpression("^ +\\s*"));
+             V.remove(QRegularExpression("\\s* +$"));
              double val = V.toDouble();//转换为数字
              //如果输入合法
              if (QString::number(val) == V) {
@@ -48,8 +49,13 @@ void minibasic::on_INPUT_returnPressed()
              }
          }
         else if (program->idenNow->type == "STR"){
+            QStringList a = temp.split(" ");
+            a.erase(a.begin());//去掉输入提示
+            QString V = a.join(" ");
+            V.remove(QRegularExpression("^ +\\s*"));
+            V.remove(QRegularExpression("\\s* +$"));
             //如果输入合法
-            if (V.contains(QRegularExpression("^[\\\'\\\"][\\w]+[\\\'\\\"]$"))) {
+            if (V.contains(QRegularExpression("^[\\\'\\\"](.*)[\\\'\\\"]$"))) {
                 program->idenNow->setvalue_str(V);//将输入记录到目的地址
             }
             //非法输入

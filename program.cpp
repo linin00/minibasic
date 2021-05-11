@@ -9,7 +9,7 @@
 #include <QPair>
 #include <QColor>
 bool isNumber(QString input) { //判断字符串是否是纯数字（非负浮点数）
-    return (input.contains(QRegularExpression("^\\d+(\\.\\d+)?$"))? true : false);
+    return (input.contains(QRegularExpression("^-?\\d+(\\.\\d+)?$"))? true : false);
 }
 void replace(QString& str) {//补空格
     if (str == "" || str == nullptr) return;
@@ -64,6 +64,7 @@ void Program::read_from_input(QString inputStr) {
 
     else if (!isNumber(temp[0]) &&
              ((temp[0] == "PRINT") ||
+              (temp[0] == "PRINTF") ||
              (temp[0] == "LET") ||
              (temp[0] == "INPUT") ||
               (temp[0] == "INPUTS"))
@@ -85,6 +86,7 @@ void Program::read_from_input(QString inputStr) {
     }
     else if (!isNumber(temp[0]) &&
              !((temp[0] == "PRINT") ||
+               (temp[0] == "PRINTF") ||
              (temp[0] == "LET") ||
              (temp[0] == "INPUT") ||
                (temp[0] == "INPUTS"))
@@ -229,7 +231,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
 
         //对有可能是字符串的情况作特殊处理
         QString temp = strList.join(" ");
-        if (temp.contains(QRegularExpression("^[\\\'\\\"][\\w]+[\\\'\\\"]$"))){
+        if (temp.contains(QRegularExpression("^[\\\'\\\"](.*)[\\\'\\\"]$"))){
             qDebug() << "匹配成功";
             iden->type="STR";//将变量改为STR类型
             strList.clear();
@@ -283,7 +285,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         result->lineNum = lineNum;//记录行号；
         return result;
     }
-    /*INPUT*/
+    /*INPUTS*/
     else if (strList[0] == "INPUTS") {
         InputsStmt* result = new InputsStmt;
         if (strList.size() != 2) {
@@ -339,6 +341,79 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         if (temp == nullptr) return nullptr;
         result->setLeft(temp);
         result->lineNum = lineNum;//记录行号；
+        return result;
+    }
+    /*PRINTF*/
+    else if (strList[0] == "PRINTF") {//"^[\\\'\\\"]((({})|(\\w+)+)(\\s))*(({})|(\\w+))[\\\'\\\"]$"
+        PrintfStmt* result = new PrintfStmt;
+        if (strList.size() < 2) {
+            error = true;
+            return nullptr;
+        }
+        /*设置左节点*/
+        strList.removeFirst();//删除PRINTF
+
+        QString cmd = strList.join(" ");//先合并
+        QStringList cmd_list = cmd.split(", ");//再分割
+        int size = cmd_list.size();
+        if(size < 1) {//参数不够
+            error = true;
+            return nullptr;
+        }
+        if (size >= 2) {
+            cmd_list[0].remove(QRegularExpression("^[\\\'\\\"]"));//去左
+            cmd_list[0].remove(QRegularExpression("[\\\'\\\"]$"));//去右
+            if (cmd_list[0].contains(QRegularExpression("[\\\'\\\"]+"))) {//含引号
+                error = true;
+                return nullptr;
+            }
+            result->setForm(cmd_list[0]);//里面是由空格分开的格式序列
+            cmd_list.erase(cmd_list.begin());//删除第一个
+            size--;
+        }
+        //处理参数
+        for (int i = 0; i < size; i++) {//处理变量//"^[\\\'\\\"](.*)[\\\'\\\"]$"
+            if(cmd_list[i].contains(QRegularExpression("^[\\\'\\\"](.*)[\\\'\\\"]$"))) {//字符串类型
+                cmd_list[i].remove(QRegularExpression("^[\\\'\\\"]"));//去左
+                cmd_list[i].remove(QRegularExpression("[\\\'\\\"]$"));//去右
+                ConstantExp* c = new ConstantExp(cmd_list[i]);//参数是字符串
+                result->addArg(c);//增加
+            }
+            else if(isNumber(cmd_list[i])) {//数字类型
+                double v = cmd_list[i].toDouble();
+                ConstantExp* c = new ConstantExp(v);//参数是字符串
+                result->addArg(c);//增加
+            }
+            else {
+                if(cmd_list[i].contains(QRegularExpression("\\s"))) {
+                    error = true;
+                    return nullptr;
+                }
+                if (identifier.size() == 0) {
+                    IdentifierExp* id = new IdentifierExp;
+                    id->root = cmd_list[i];
+                    identifier.append(id);
+                    result->addArg(id);
+                }
+                else
+                for(int j = 0; j < identifier.size(); j++) {
+                    if (identifier[j]->root == cmd_list[i]) {
+                        result->addArg(identifier[j]);
+                        break;
+                    }
+                    else {
+                        IdentifierExp* id = new IdentifierExp;
+                        id->root = cmd_list[i];
+                        identifier.append(id);
+                        result->addArg(id);
+                    }
+                }
+            }
+        }
+        if (!result->equal()) {//参数错误
+            error = true;
+            return nullptr;
+        }
         return result;
     }
     /*GOTO*/
@@ -575,7 +650,7 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
                 inputList.removeFirst();
                 continue;
             }
-            else if (temp.contains(QRegularExpression("^[\\\'\\\"][\\w]+[\\\'\\\"]$"))) {//temp 是字符串
+            else if (temp.contains(QRegularExpression("^[\\\'\\\"](.*)[\\\'\\\"]$"))) {//temp 是字符串
                 ConstantExp* constant = new ConstantExp(temp);
                 stack.push(constant);
                 inputList.removeFirst();
@@ -740,6 +815,10 @@ void Program::run() {
             qDebug() << sta->Left();
             Result->setText(RESULT);//打印
         }
+        else if (sta->root == "PRINTF") {
+            RESULT = RESULT + sta->OP() + "\n";//将输出内容存入RESULT
+            Result->setText(RESULT);//打印
+        }
         else if (sta->root == "IF THEN") {
             double L = *sta->TAR()->value();
             if (L - int(L) != 0) {
@@ -872,6 +951,10 @@ void Program::Debug() {
         qDebug() << sta->Left();
         Result->setText(RESULT);//打印
     }
+    else if (sta->root == "PRINTF") {
+        RESULT = RESULT + sta->OP() + "\n";//将输出内容存入RESULT
+        Result->setText(RESULT);//打印
+    }
     else if (sta->root == "IF THEN") {
         double L = *sta->TAR()->value();
         if (L - int(L) != 0) {
@@ -976,6 +1059,10 @@ void Program::RUN() {
     else if (sta->root == "PRINT") {
         RESULT = RESULT + QString::number(*sta->Left()->value()) + "\n";//将输出内容存入RESULT
         qDebug() << sta->Left();
+        Result->setText(RESULT);//打印
+    }
+    else if (sta->root == "PRINTF") {
+        RESULT = RESULT + sta->OP() + "\n";//将输出内容存入RESULT
         Result->setText(RESULT);//打印
     }
     Input->clear();//把输入窗口的东东清掉

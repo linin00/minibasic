@@ -1,18 +1,21 @@
 #ifndef STATEMENT_H
 #define STATEMENT_H
 #include "expression.h"
+#include <QRegularExpression>
 
 class statement //语句类的父类
 {
 public:
     int lineNum = -1;
     QString root;//根节点
+public:
     statement(){//初始化
         root.clear();
         right = nullptr;
         left = nullptr;
     }
     ~statement(){}
+public:
     virtual expression* Left(){
         return left;
     }
@@ -100,6 +103,91 @@ public:
     }
 };
 
+class PrintfStmt: public statement {//左子树是表达式，右子树为空
+private:
+    QString form;//输出格式
+    QVector<expression*> list;//参数列表
+    int argc = 0;//参数个数
+    int argcr = 0;//需要参数个数
+    bool isNumber(QString input) { //判断字符串是否是纯数字（非负浮点数）
+        return (input.contains(QRegularExpression("^-?\\d+(\\.\\d+)?$"))? true : false);
+    }
+public:
+    PrintfStmt() {
+        root = "PRINTF";
+        form.clear();
+        list.clear();
+    }
+    ~PrintfStmt() {}
+public:
+    void addArg(expression* arg) {
+        list.append(arg);
+        argc++;
+    }
+    expression* getArg(int n) {
+        if (n >= argc) {
+            qDebug() << "下标越界";
+            return nullptr;
+        }
+        else return list[n];
+    }
+    void setForm(QString f) {
+        form = f;
+    }
+    QString OP() {
+        QString result = "";
+        if (argcr == 0) {
+            if (list[0]->type == "DOUBLE") {
+                result = QString::number(*list[0]->value());
+            }
+            else if(list[0]->type == "STR") {
+                result = list[0]->value_str();
+            }
+        }
+        else if (argcr >= 1) {//解析form
+            QStringList formList = form.split(" ");//分割
+            int size = formList.size();
+            int argt = 0;
+            for (int i = 0; i < size; i++) {
+                if(isNumber(formList[i])) {
+                    qDebug()<<"num";
+                    result = result + formList[i];
+                }
+                else if (formList[i] == "{}") {
+                    qDebug() << "{}";
+                    if(list[argt]->type=="STR"){
+                        result = result + list[argt]->value_str();
+                        argt++;
+                    }
+                    else if (list[argt]->type == "DOUBLE") {
+                        qDebug()<< "test";
+                        result = result + QString::number(*list[argt]->value());
+                        argt++;
+                    }
+                }
+                else {//ident
+                    qDebug()<<"string";
+                    result = result + formList[i];
+                }
+            }
+        }
+        result = "\"" + result + "\"";
+        qDebug()<< "success";
+        return result;
+    }
+    bool equal() {
+        QStringList formList = form.split(" ");//分割
+        int size = formList.size();
+        for (int i = 0; i < size; i++) {//计算实际参数个数
+            if (formList[i] == "{}")
+                argcr++;
+        }
+        qDebug() << argc << " " << argcr;
+        if (argcr != argc && argcr != 0) return false;
+        else return true;
+    }
+};
+
 class InputStmt: public statement {//左子树是表达式（标识符），右子树是空
 private:
     expression* left;
@@ -128,7 +216,7 @@ private:
     expression* right;
 public:
     InputsStmt() {
-        root = "INPUT";
+        root = "INPUTS";
         left = nullptr;
         right = nullptr;
     }
