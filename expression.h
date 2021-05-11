@@ -136,6 +136,7 @@ public:
     double* value() {
         if (!done) {//如果还没有声明
             QMessageBox::warning(NULL, "Warning!", root + "\n标识符不存在");
+            qDebug()<<root + "\nDOUBLE标识符不存在";
         }
         return &val;
     }
@@ -145,6 +146,7 @@ public:
     QString value_str() {
         if (!done) {//如果还没有声明
             QMessageBox::warning(NULL, "Warning!", root + "\n标识符不存在");
+            qDebug()<<root + "\nSTR标识符不存在";
         }
         return val_str;
     }

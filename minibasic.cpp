@@ -26,7 +26,6 @@ void minibasic::on_INPUT_returnPressed()
 {
     //输入变量
     if (!program->state) {
-        qDebug() << "test";//获取输入框内容并处理
         QString temp = ui -> INPUT -> text();//捕获内容
         temp.replace(QRegularExpression("[\\s]+"), " ");
         temp.remove(QRegularExpression("^ +\\s*"));
@@ -172,7 +171,4 @@ void minibasic::on_Debug_clicked()
         program->debug = true;
     }
     program->Debug();
-    /*if (program->line == 0) {
-        program->identityoff();
-    }*/
 }

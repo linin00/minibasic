@@ -117,7 +117,7 @@ void Program::read_from_input(QString inputStr) {
             break;
         }
     }
-
+    //identityoff();
     build();//构建
     if (error) {
         error = false;
@@ -176,18 +176,19 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     /*REM*/
     if (strList[0] == "REM") {//头节点
         RemStmt* result = new RemStmt;
-
         //设置left
         strList.removeFirst();
         QString temp = strList.join(" ");//将REM后面的字符串记录到temp中
         result->setLeft(temp);//设置节点中的left节点
         result->lineNum = lineNum;//记录行号；
         return result;
+        qDebug()<<"REM";
     }
     /*LET*/
     else if (strList[0] == "LET") {//赋值语句
+        qDebug()<<"LET";
         if (strList[2] != "=") {
-            //QMessageBox::warning(NULL, "Warning!", inputStr + "\n赋值语句格式错误");
+            qDebug()<<"LET格式错误";
             error = true;
             return nullptr;
         }
@@ -198,7 +199,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
 
         if (strList[1].contains(QRegularExpression("^[\\-\\+]?\\d*[0-9](|.\\d*[0-9]|,\\d*[0-9])?$"))||
                 strList[1].contains(QRegularExpression("[\\+\\-\\*\\/\\>\\<\\?\\.||,\\=]"))) {
-            //QMessageBox::warning(NULL, "Warning!", inputStr + "\n赋值语句格式错误,不能给常数或特殊符号赋值");
+            //给常数或特殊符号赋值时报错
             error = true;
             return nullptr;
         }
@@ -207,18 +208,21 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         for (int i = 0; i < size; i++) {
             if (identifier[i]->root == strList[1]) {//如果标识符已存在
                 iden = identifier[i];//取其指针
+                qDebug()<<"LET：查找成功："<<strList[1];
                 break;
             }
             if (i == size - 1) {//如果不存在，申请新的标识符，并存入向量中
                 iden = new IdentifierExp;
                 iden->setRoot(strList[1]);
                 identifier.push_back(iden);//存入向量中
+                qDebug()<<"LET：创建成功："<<strList[1];
             }
         }
         if (size == 0) {
             iden = new IdentifierExp;
             iden->setRoot(strList[1]);
             identifier.push_back(iden);//存入向量中
+            qDebug()<<"LET：创建成功："<<strList[1];
         }
 
         result->setLeft(iden);//记录赋值的对象
@@ -232,7 +236,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         //对有可能是字符串的情况作特殊处理
         QString temp = strList.join(" ");
         if (temp.contains(QRegularExpression("^[\\\'\\\"](.*)[\\\'\\\"]$"))){
-            qDebug() << "匹配成功";
+            qDebug() << "LET：复制类型为字符串";
             iden->type="STR";//将变量改为STR类型
             strList.clear();
             strList.append(temp);
@@ -246,9 +250,10 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     }
     /*INPUT*/
     else if (strList[0] == "INPUT") {
+        qDebug()<<"INPUT";
         InputStmt* result = new InputStmt;
         if (strList.size() != 2) {
-            //QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误");
+            qDebug()<<"INPUT格式错误";
             error = true;
             return nullptr;
         }
@@ -256,15 +261,17 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         //设置left
         if (strList[1].contains(QRegularExpression("^[\\-\\+]?\\d*[0-9](|.\\d*[0-9]|,\\d*[0-9])?$"))||
                 strList[1].contains(QRegularExpression("[\\+\\-\\*\\/\\>\\<\\?\\.||,\\=]"))) {
-        //QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误,不能给常数或特殊符号赋值");
-        error = true;
-        return nullptr;
-    }
+
+            //赋值对象不能为常数或特殊字符
+            error = true;
+            return nullptr;
+        }
         int size = identifier.size();
         for (int i = 0; i < size; i++) {
             if (strList[1] == identifier[i]->root) {//存在标识符
                 identifier[i]->setType("DOUBLE");
                 result->setLeft(identifier[i]);
+                qDebug()<<"INPUT查找成功："<<strList[1];
                 break;
             }
             if (i == size - 1) {//不存在
@@ -272,24 +279,24 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
                 temp->root = strList[1];
                 result->setLeft(temp);
                 identifier.push_back(temp);
+                qDebug()<<"INPUT创建成功："<<strList[1];
             }
         }
-
         if (size == 0) {//不存在
             IdentifierExp* temp = new IdentifierExp;
             temp->root = strList[1];
             result->setLeft(temp);
             identifier.push_back(temp);
+            qDebug()<<"INPUT创建成功："<<strList[1];
         }
-
         result->lineNum = lineNum;//记录行号；
         return result;
     }
     /*INPUTS*/
     else if (strList[0] == "INPUTS") {
+        qDebug()<<"INPUTS";
         InputsStmt* result = new InputsStmt;
         if (strList.size() != 2) {
-            //QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误");
             error = true;
             return nullptr;
         }
@@ -297,41 +304,42 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         //设置left
         if (strList[1].contains(QRegularExpression("^[\\-\\+]?\\d*[0-9](|.\\d*[0-9]|,\\d*[0-9])?$"))||
                 strList[1].contains(QRegularExpression("[\\+\\-\\*\\/\\>\\<\\?\\.||,\\=]"))) {
-        //QMessageBox::warning(NULL, "Warning!", inputStr + "\n输入语句格式错误,不能给常数或特殊符号赋值");
         error = true;
         return nullptr;
         }
-    int size = identifier.size();
-    for (int i = 0; i < size; i++) {
-        if (strList[1] == identifier[i]->root) {//存在标识符
-            result->setLeft(identifier[i]);
-            result->Left()->setType("STR");
-        }
-        if (i == size - 1) {//不存在
+        int size = identifier.size();
+        if (size == 0) {//不存在
             IdentifierExp* temp = new IdentifierExp;
             temp->root = strList[1];
             temp->type="STR";
             result->setLeft(temp);
             identifier.push_back(temp);
+            qDebug()<<"01INPUTS创建成功："<<strList[1];
         }
-    }
-
-    if (size == 0) {//不存在
-        IdentifierExp* temp = new IdentifierExp;
-        temp->root = strList[1];
-        temp->type="STR";
-        result->setLeft(temp);
-        identifier.push_back(temp);
-    }
-
-    result->lineNum = lineNum;//记录行号；
-    return result;
+        else for (int i = 0; i < size; i++) {
+            if (strList[1] == identifier[i]->root) {//存在标识符
+                result->setLeft(identifier[i]);
+                result->Left()->setType("STR");
+                qDebug()<<"INPUTS查找成功："<<strList[1];
+                break;
+            }
+            if (i == size - 1) {//不存在
+                IdentifierExp* temp = new IdentifierExp;
+                temp->root = strList[1];
+                temp->type="STR";
+                result->setLeft(temp);
+                identifier.push_back(temp);
+                qDebug()<<"00INPUTS创建成功："<<strList[1];
+            }
+        }
+        result->lineNum = lineNum;//记录行号；
+        return result;
     }
     /*PRINT*/
     else if (strList[0] == "PRINT") {
+        qDebug()<<"PRINT";
         PrintStmt* result = new PrintStmt;
         if (strList.size() < 2) {
-            //QMessageBox::warning(NULL, "Warning!", inputStr + "\n打印语句格式错误");
             error = true;
             return nullptr;
         }
@@ -344,7 +352,8 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         return result;
     }
     /*PRINTF*/
-    else if (strList[0] == "PRINTF") {//"^[\\\'\\\"]((({})|(\\w+)+)(\\s))*(({})|(\\w+))[\\\'\\\"]$"
+    else if (strList[0] == "PRINTF") {
+        qDebug()<<"PRINTF";
         PrintfStmt* result = new PrintfStmt;
         if (strList.size() < 2) {
             error = true;
@@ -357,10 +366,12 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         QStringList cmd_list = cmd.split(", ");//再分割
         int size = cmd_list.size();
         if(size < 1) {//参数不够
+            qDebug()<<"PRINTF格式错误";
             error = true;
             return nullptr;
         }
         if (size >= 2) {
+            qDebug()<<"PRINTF：带格式输出";
             cmd_list[0].remove(QRegularExpression("^[\\\'\\\"]"));//去左
             cmd_list[0].remove(QRegularExpression("[\\\'\\\"]$"));//去右
             if (cmd_list[0].contains(QRegularExpression("[\\\'\\\"]+"))) {//含引号
@@ -373,39 +384,45 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         }
         //处理参数
         for (int i = 0; i < size; i++) {//处理变量//"^[\\\'\\\"](.*)[\\\'\\\"]$"
+            qDebug()<< i;
             if(cmd_list[i].contains(QRegularExpression("^[\\\'\\\"](.*)[\\\'\\\"]$"))) {//字符串类型
                 cmd_list[i].remove(QRegularExpression("^[\\\'\\\"]"));//去左
                 cmd_list[i].remove(QRegularExpression("[\\\'\\\"]$"));//去右
                 ConstantExp* c = new ConstantExp(cmd_list[i]);//参数是字符串
                 result->addArg(c);//增加
+                qDebug()<<"PRINTF：字符串参数"<<i;
             }
             else if(isNumber(cmd_list[i])) {//数字类型
                 double v = cmd_list[i].toDouble();
-                ConstantExp* c = new ConstantExp(v);//参数是字符串
+                ConstantExp* c = new ConstantExp(v);//参数是数字
                 result->addArg(c);//增加
+                qDebug()<<"PRINTF：数字参数"<<i;
             }
-            else {
+            else {//变量
                 if(cmd_list[i].contains(QRegularExpression("\\s"))) {
                     error = true;
                     return nullptr;
                 }
-                if (identifier.size() == 0) {
+                qDebug()<<"PRINTF：变量参数"<<i;
+                if (identifier.size() == 0) {//如果当前没有变量，声明一个
                     IdentifierExp* id = new IdentifierExp;
                     id->root = cmd_list[i];
                     identifier.append(id);
                     result->addArg(id);
+                    qDebug()<<"PRINTF：00创建成功："<< cmd_list[i];
                 }
-                else
-                for(int j = 0; j < identifier.size(); j++) {
+                else for(int j = 0; j < identifier.size(); j++) {//在已有变量中寻找
                     if (identifier[j]->root == cmd_list[i]) {
                         result->addArg(identifier[j]);
+                        qDebug()<<"PRINTF：查找成功："<< cmd_list[i];
                         break;
                     }
-                    else {
+                    if (j == identifier.size() - 1){
                         IdentifierExp* id = new IdentifierExp;
                         id->root = cmd_list[i];
                         identifier.append(id);
                         result->addArg(id);
+                        qDebug()<<"PRINTF：01创建成功："<< cmd_list[i];
                     }
                 }
             }
@@ -414,12 +431,13 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
             error = true;
             return nullptr;
         }
+        result->lineNum = lineNum;//记录行号；
         return result;
     }
     /*GOTO*/
     else if (strList[0] == "GOTO") {
+        qDebug()<<"GOTO";
         if (lineNum == -1) {
-            //QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
             error = true;
             return nullptr;
         }
@@ -434,6 +452,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     }
     /*IF*/
     else if (strList[0] == "IF") {
+        qDebug()<<"IF";
         if (lineNum == -1) {
             //QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
             error = true;
@@ -516,6 +535,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     }
     /*END*/
     else if (strList[0] == "END") {
+        qDebug()<<"END";
         if (lineNum == -1) {
             //QMessageBox::warning(NULL, "Warning!", inputStr + "\n必须有行号");
             error = true;
@@ -527,7 +547,7 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
     }
     /*不存在*/
     else {//不存在的语句
-        //QMessageBox::warning(NULL, "Warning!", inputStr + "\n不存在的语句");
+        qDebug()<<"语句不存在";
         error = true;
         return nullptr;
     }
@@ -665,13 +685,13 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
                 identifier.push_back(iden);
                 stack.push(iden);
                 inputList.removeFirst();
-                qDebug() << "没找到标识符，但新建了一个";
+                qDebug() << "构建表达式：创建成功："<<temp;
             }
             else for (int i = 0; i < size; i++) {
                 if (temp == identifier[i]->show()) {//找到了相同的标识符
                     stack.push(identifier[i]);
                     inputList.removeFirst();
-                    qDebug() << "成功找到标识符";
+                    qDebug() << "构建表达式：查找成功："<<temp;
                     break;
                 }
                 else if (i == size - 1) { //不存在这个标识符，先放一个在列表
@@ -680,7 +700,7 @@ expression* Program::buildExp(QStringList inputList) {//生成表达式树
                     identifier.push_back(iden);
                     stack.push(iden);
                     inputList.removeFirst();
-                    qDebug() << "没找到标识符，但新建了一个";
+                    qDebug() << "构建表达式：创建成功："<<temp;
                 }
             }
 
@@ -715,15 +735,27 @@ QString Program::buildtree(int level, expression* exp) {
     return result;
 }
 QString Program::buildtree(int i) {//构建单行可打印语句树，i：第i行语句
+    //QMessageBox::information(NULL,"123",program[i]->root);
     int size = program.size();
     if (i > size - 1) abort();
+
     QString result;
     //处理指令树后返回
     if (program[i]->lineNum != -1)
         result = result + QString::number(program[i]->lineNum);//行号
     result = result + " ";
-    result = result + program[i]->root;////////
+    result = result + program[i]->root;
     result = result + "\n";
+    if (program[i]->root=="PRINTF") {
+        QVector<expression*>list = program[i]->get_list();
+        QString form = program[i]->get_form();
+        result = result + "     " + form + "\n";
+        for (int i = 0; i < list.size(); i++) {
+            result = result + buildtree(1, list[i]);
+        }
+        //QMessageBox::information(NULL,"123","212");
+        return result;
+    }
     if (program[i]->root=="IF THEN") {
         result = result + "     " + program[i]->OP() + "\n";
     }
@@ -753,11 +785,13 @@ void Program::showIdent(){
 }
 void Program::run() {
     if (debug) {
+        qDebug()<<"调试转运行";
         highlight_pos_now = -1;
         highlight();
-        debug = false;
+        //debug = false;
     }
     if (numOfError != 0) {//如果有错，不运行
+        qDebug()<<"当先有显式错误，不可以运行";
         if (!debug){
             Load->setEnabled(true);
             Clear->setEnabled(true);
@@ -772,20 +806,20 @@ void Program::run() {
     RESULT.clear();//运行前清空运算结果
     int size = program.size();
     if (size == 0) return;//如果语句树为空，直接返回
-
+    qDebug()<<"运行";
     for (; line < size ; line++) {//先打印到当前执行的命令
         if (program[line]->lineNum != -1){//如果没有行号，不增加语法树
             TREE = TREE + buildtree(line);
         }
         Tree->setText(TREE);
-
         statement* sta = program[line];
-
+        //开始运行
         if (sta->root == "REM") {
+            qDebug()<<"running: REM";
             continue;//不做任何事
         }
         else if (sta->root == "LET =") {//赋值
-
+            qDebug()<<"running: LET";
             sta->Left()->turn_on();//声明变量
             if (sta->Left()->type == "DOUBLE"){
                 *sta->Left()->setvalue() = *sta->Right()->value();
@@ -795,6 +829,7 @@ void Program::run() {
             }
         }
         else if (sta->root == "INPUT") {//输入，从输入框获取信息
+            qDebug()<<"running: INPUT";
             sta->Left()->turn_on();//声明变量
             state = false;
             Input->setText("? ");
@@ -803,6 +838,7 @@ void Program::run() {
             return;
         }
         else if (sta->root == "INPUTS") {//输入字符串，从输入框获取信息
+            qDebug()<<"running: INPUTS";
             sta->Left()->turn_on();//声明变量
             state = false;
             Input->setText("? ");
@@ -811,15 +847,21 @@ void Program::run() {
             return;
         }
         else if (sta->root == "PRINT") {
+            qDebug()<<"running: PRINT";
+            if (sta->Left()->type == "STR") {
+                QMessageBox::warning(NULL, "Warning!", "PRINT不能打印字符串类型");
+                return;//停止运行
+            }
             RESULT = RESULT + QString::number(*sta->Left()->value()) + "\n";//将输出内容存入RESULT
-            qDebug() << sta->Left();
             Result->setText(RESULT);//打印
         }
         else if (sta->root == "PRINTF") {
+            qDebug()<<"running: PRINTF";
             RESULT = RESULT + sta->OP() + "\n";//将输出内容存入RESULT
             Result->setText(RESULT);//打印
         }
         else if (sta->root == "IF THEN") {
+            qDebug()<<"running: IF THEN";
             double L = *sta->TAR()->value();
             if (L - int(L) != 0) {
                 QMessageBox::warning(NULL, "Warning!", "THEN " + QString::number(L) + "\n不存在目标行号");
@@ -847,7 +889,6 @@ void Program::run() {
                 if (*sta->Left()->value() != *sta->Right()->value()) jmp = true;
             }
 
-
             int _size = program.size();//设置执行行号
             if (!jmp) continue;//不跳转
             for (int i = 0; i < _size; i++) {
@@ -863,6 +904,7 @@ void Program::run() {
 
         }
         else if (sta->root == "GOTO") {
+            qDebug()<<"running: GOTO";
             int L = *sta->Left()->value();//读取goto目标
 
             int _size = program.size();//设置执行行号
@@ -878,6 +920,7 @@ void Program::run() {
             }
         }
         else if (sta->root == "END") {
+            qDebug()<<"running: END";
             break;
         }
     }
@@ -886,9 +929,10 @@ void Program::run() {
     state = 1;//归位
     line = 0;
     showIdent();
-    if (!debug){
+    if (debug){
         Load->setEnabled(true);
         Clear->setEnabled(true);
+        debug = false;
     }
 }
 void Program::Debug() {
@@ -948,7 +992,6 @@ void Program::Debug() {
     else if (sta->root == "PRINT") {
 
         RESULT = RESULT + QString::number(*sta->Left()->value()) + "\n";//将输出内容存入RESULT
-        qDebug() << sta->Left();
         Result->setText(RESULT);//打印
     }
     else if (sta->root == "PRINTF") {
@@ -1058,7 +1101,6 @@ void Program::RUN() {
     }
     else if (sta->root == "PRINT") {
         RESULT = RESULT + QString::number(*sta->Left()->value()) + "\n";//将输出内容存入RESULT
-        qDebug() << sta->Left();
         Result->setText(RESULT);//打印
     }
     else if (sta->root == "PRINTF") {
@@ -1109,7 +1151,6 @@ void Program::highlight() {
         h.format.setBackground(line.second);
         extras.append(h);
     }
-    qDebug() << extras.size();
     Code->setExtraSelections(extras);
 }
 void Program::identityoff(){

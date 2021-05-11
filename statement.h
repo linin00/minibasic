@@ -28,6 +28,12 @@ public:
     virtual expression* TAR(){
         return nullptr;
     }
+    virtual QString get_form(){
+        return "";
+    }
+    virtual QVector<expression*> get_list(){
+        return {nullptr};
+    }
 private:
     expression* left;
     expression* right;
@@ -136,7 +142,8 @@ public:
     }
     QString OP() {
         QString result = "";
-        if (argcr == 0) {
+        if (argcr == 0) {//没有输出格式限制时
+            qDebug()<<"无格式输出";
             if (list[0]->type == "DOUBLE") {
                 result = QString::number(*list[0]->value());
             }
@@ -160,7 +167,7 @@ public:
                         argt++;
                     }
                     else if (list[argt]->type == "DOUBLE") {
-                        qDebug()<< "test";
+                        qDebug()<< "num";
                         result = result + QString::number(*list[argt]->value());
                         argt++;
                     }
@@ -172,8 +179,14 @@ public:
             }
         }
         result = "\"" + result + "\"";
-        qDebug()<< "success";
         return result;
+    }
+
+    QString get_form(){
+        return form;
+    }
+    QVector<expression*> get_list(){
+        return list;
     }
     bool equal() {
         QStringList formList = form.split(" ");//分割
