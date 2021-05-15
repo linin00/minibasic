@@ -158,26 +158,27 @@ public:
             for (int i = 0; i < size; i++) {
                 if(isNumber(formList[i])) {
                     qDebug()<<"num";
-                    result = result + formList[i];
+                    result = result + formList[i] + " ";
                 }
                 else if (formList[i] == "{}") {
                     qDebug() << "{}";
                     if(list[argt]->type=="STR"){
-                        result = result + list[argt]->value_str();
+                        result = result + list[argt]->value_str() + " ";
                         argt++;
                     }
                     else if (list[argt]->type == "DOUBLE") {
                         qDebug()<< "num";
-                        result = result + QString::number(*list[argt]->value());
+                        result = result + QString::number(*list[argt]->value()) + " ";
                         argt++;
                     }
                 }
                 else {//ident
                     qDebug()<<"string";
-                    result = result + formList[i];
+                    result = result + formList[i] + " ";
                 }
             }
         }
+        result.remove(QRegularExpression("\\s$"));
         result = "\"" + result + "\"";
         return result;
     }

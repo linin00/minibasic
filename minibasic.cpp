@@ -25,6 +25,7 @@ minibasic::~minibasic()
 void minibasic::on_INPUT_returnPressed()
 {
     //输入变量
+    if (program->debug && program->state) return;//debug状态不能修改代码
     if (!program->state) {
         QString temp = ui -> INPUT -> text();//捕获内容
         temp.replace(QRegularExpression("[\\s]+"), " ");
@@ -113,11 +114,11 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
         }
         else {//打开成功
             program->clear();//清空所有存储结构
-
             ui -> RESULT -> clear();//清空窗口
             ui -> TREE -> clear();
             ui -> INPUT -> clear();
             ui -> CODE -> clear();
+            ui -> IDENT -> clear();
 
             tempStr = file.readAll();//读取文件内容
             program->read_from_files(tempStr);//记录到input
@@ -128,13 +129,16 @@ void minibasic::on_LOAD_clicked()//从文件读取命令
 }
 void minibasic::on_RUN_clicked()//运行程序，打印结果和语句树；在输入变量值时判断合法性以及读取变量值
 { 
-     if (!program->state) return;
+     if (!program->state) return;//输入变量状态点击无用
      //运行程序
-     if (!program->debug) program->TREE.clear();
+     if (!program->debug) program->TREE.clear();//debug状态不清空语法树
      ui -> TREE -> clear();//在多次连续运行时可以清空语法树窗口
      ui -> RESULT -> clear();//在多次连续运行时可以清空结果窗口
      ui -> IDENT -> clear();//在多次连续运行时可以清空变量窗口
      program->run();
+     //运行结束之后清空结果树和语法树，但不影响显示
+     program->RESULT.clear();
+     program->TREE.clear();
 }
 void minibasic::on_CLEAR_clicked()//清空代码、运行结果、代码树，注意先后
 {
@@ -152,12 +156,15 @@ void minibasic::on_Debug_clicked()
 {
     if (!program->state || !program->code.size()) return;
     if (program->debug && program->line == 0) {
-        QMessageBox::information(this,"结束","被调试的程序正常结束");
+        if (!program->debug_error)
+            QMessageBox::information(this,"结束","被调试的程序正常结束");
         ui->LOAD->setEnabled(true);
         ui->CLEAR->setEnabled(true);
         program->debug = false;
         program->highlight_pos_now = -1;
         program->highlight();
+        program->RESULT.clear();
+        program->TREE.clear();
         return;
     }
     if (!program->debug) {

@@ -54,6 +54,7 @@ public://程序状态
     bool error = false;//构建是否出错
     bool debug = false;
     bool single = false;
+    bool debug_error = false;
 public://控件指针
     QTextBrowser* Code;
     QTextBrowser* Result;

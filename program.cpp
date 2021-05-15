@@ -372,6 +372,11 @@ statement* Program::build(QString inputStr) {//由一条语句生成语句树，
         }
         if (size >= 2) {
             qDebug()<<"PRINTF：带格式输出";
+            if (!cmd_list[0].contains(QRegularExpression("^[\\\'\\\"]((.+|({}))\\s)*(.+|({}))[\\\'\\\"]$"))) {
+                qDebug()<<"PRINTF：带格式输出错误";
+                error = true;
+                return nullptr;
+            }
             cmd_list[0].remove(QRegularExpression("^[\\\'\\\"]"));//去左
             cmd_list[0].remove(QRegularExpression("[\\\'\\\"]$"));//去右
             if (cmd_list[0].contains(QRegularExpression("[\\\'\\\"]+"))) {//含引号
@@ -803,7 +808,6 @@ void Program::run() {
         return;
     }
 
-    RESULT.clear();//运行前清空运算结果
     int size = program.size();
     if (size == 0) return;//如果语句树为空，直接返回
     qDebug()<<"运行";
@@ -923,6 +927,7 @@ void Program::run() {
             qDebug()<<"running: END";
             break;
         }
+        showIdent();
     }
 
     Input->clear();//把输入窗口的东东清掉
@@ -933,7 +938,9 @@ void Program::run() {
         Load->setEnabled(true);
         Clear->setEnabled(true);
         debug = false;
+        return;
     }
+    RESULT.clear();
 }
 void Program::Debug() {
     int size = program.size();
@@ -953,13 +960,21 @@ void Program::Debug() {
     highlight_pos_now += code[line].size();
     highlight();
     //先打印到当前执行的命令
-    if (program[line]->lineNum != -1){//如果没有行号，不增加语法树
+    statement* sta = program[line];
+    if (sta == nullptr) {
+        state = 1;//归位
+        line = 0;
+        qDebug() << "调试结束\n";
+        QMessageBox::warning(NULL,"调试","调试错误");
+        debug_error = true;
+        return;
+    }
+    if (sta->lineNum != -1){//如果没有行号，不增加语法树
         //TREE = TREE + buildtree(line);
         TREE = buildtree(line);
     }
     Tree->setText(TREE);
 
-    statement* sta = program[line];
     if (sta->root == "REM") {
         //不做任何事
     }
@@ -1002,6 +1017,7 @@ void Program::Debug() {
         double L = *sta->TAR()->value();
         if (L - int(L) != 0) {
             QMessageBox::warning(NULL, "Warning!", "THEN " + QString::number(L) + "\n不存在目标行号");
+            debug_error = true;
             return;//停止运行
         }
 
@@ -1030,12 +1046,25 @@ void Program::Debug() {
         int _size = program.size();//设置执行行号
         if (jmp)//不跳转
         for (int i = 0; i < _size; i++) {
+            if (!program[i] && i != _size - 1) continue;
+            if (!program[i] && i == _size - 1) {
+                qDebug() << "调试结束\n";
+                QMessageBox::warning(NULL,"调试","调试错误\n不存在目标行号或目标语句有误");
+                debug_error = true;
+                state = 1;//归位
+                line = 0;
+                return;
+            }
             if (program[i]->lineNum == L) {
                 line = i - 1;//减一，因为等下会加一
                 break;
             }
             if (i == _size - 1) {
-                QMessageBox::warning(NULL, "Warning!", "THEN " + QString::number(L) + "\n不存在目标行号");
+                qDebug() << "调试结束\n";
+                QMessageBox::warning(NULL,"调试","调试错误\n不存在目标行号或目标语句有误");
+                debug_error = true;
+                state = 1;//归位
+                line = 0;
                 return;
             }
         }
@@ -1046,12 +1075,25 @@ void Program::Debug() {
 
         int _size = program.size();//设置执行行号
         for (int i = 0; i < _size; i++) {
+            if (!program[i] && i != _size - 1) continue;
+            if (!program[i] && i == _size - 1) {
+                qDebug() << "调试结束\n";
+                QMessageBox::warning(NULL,"调试","调试错误\n不存在目标行号或目标语句有误");
+                debug_error = true;
+                state = 1;//归位
+                line = 0;
+                return;
+            }
             if (program[i]->lineNum == L) {
                 line = i - 1;
                 break;
             }
             if (i == _size - 1) {
-                QMessageBox::warning(NULL, "Warning!", "GOTO " + QString::number(L) + "\n不存在目标行号");
+                qDebug() << "调试结束\n";
+                QMessageBox::warning(NULL,"调试","调试错误\n不存在目标行号或目标语句有误");
+                debug_error = true;
+                state = 1;//归位
+                line = 0;
                 return;
             }
         }
