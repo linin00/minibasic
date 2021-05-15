@@ -754,7 +754,7 @@ QString Program::buildtree(int i) {//构建单行可打印语句树，i：第i�
     if (program[i]->root=="PRINTF") {
         QVector<expression*>list = program[i]->get_list();
         QString form = program[i]->get_form();
-        result = result + "     " + form + "\n";
+        if(form != "") result = result + "     " + form + "\n";
         for (int i = 0; i < list.size(); i++) {
             result = result + buildtree(1, list[i]);
         }
@@ -793,7 +793,7 @@ void Program::run() {
         qDebug()<<"调试转运行";
         highlight_pos_now = -1;
         highlight();
-        //debug = false;
+        debug = false;
     }
     if (numOfError != 0) {//如果有错，不运行
         qDebug()<<"当先有显式错误，不可以运行";
@@ -934,12 +934,10 @@ void Program::run() {
     state = 1;//归位
     line = 0;
     showIdent();
-    if (debug){
-        Load->setEnabled(true);
-        Clear->setEnabled(true);
-        debug = false;
-        return;
-    }
+    Load->setEnabled(true);
+    Clear->setEnabled(true);
+    debug = false;
+    //return;
     RESULT.clear();
 }
 void Program::Debug() {
