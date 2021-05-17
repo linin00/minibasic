@@ -599,7 +599,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
    <widget class="QPushButton" name="LOAD">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>40</x>
       <y>570</y>
       <width>161</width>
       <height>24</height>
@@ -615,7 +615,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
    <widget class="QPushButton" name="RUN">
     <property name="geometry">
      <rect>
-      <x>310</x>
+      <x>220</x>
       <y>570</y>
       <width>161</width>
       <height>24</height>
@@ -625,13 +625,13 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
      <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
     </property>
     <property name="text">
-     <string>RUN</string>
+     <string>执行代码(RUN)</string>
     </property>
    </widget>
    <widget class="QPushButton" name="CLEAR">
     <property name="geometry">
      <rect>
-      <x>610</x>
+      <x>580</x>
       <y>570</y>
       <width>161</width>
       <height>24</height>
@@ -641,7 +641,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
      <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
     </property>
     <property name="text">
-     <string>CLEAR</string>
+     <string>清空代码(CLEAR)</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_4">
@@ -694,7 +694,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
      <rect>
       <x>30</x>
       <y>310</y>
-      <width>741</width>
+      <width>351</width>
       <height>231</height>
      </rect>
     </property>
@@ -716,6 +716,54 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     </property>
     <property name="styleSheet">
      <string notr="true">border-radius : 15px</string>
+    </property>
+   </widget>
+   <widget class="QTextBrowser" name="IDENT">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>310</y>
+      <width>371</width>
+      <height>231</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 15px</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Debug">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>570</y>
+      <width>161</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
+    </property>
+    <property name="text">
+     <string>调试/单步 (Debug/Step)</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>290</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Aa卑微的我喜欢遥远的你 (非商业使用)&quot;;</string>
+    </property>
+    <property name="text">
+     <string>当前变量</string>
     </property>
    </widget>
   </widget>

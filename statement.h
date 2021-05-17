@@ -1,18 +1,21 @@
 #ifndef STATEMENT_H
 #define STATEMENT_H
 #include "expression.h"
+#include <QRegularExpression>
 
 class statement //语句类的父类
 {
 public:
     int lineNum = -1;
     QString root;//根节点
+public:
     statement(){//初始化
         root.clear();
         right = nullptr;
         left = nullptr;
     }
     ~statement(){}
+public:
     virtual expression* Left(){
         return left;
     }
@@ -24,6 +27,12 @@ public:
     }
     virtual expression* TAR(){
         return nullptr;
+    }
+    virtual QString get_form(){
+        return "";
+    }
+    virtual QVector<expression*> get_list(){
+        return {nullptr};
     }
 private:
     expression* left;
@@ -100,6 +109,99 @@ public:
     }
 };
 
+class PrintfStmt: public statement {//左子树是表达式，右子树为空
+private:
+    QString form;//输出格式
+    QVector<expression*> list;//参数列表
+    int argc = 0;//参数个数
+    int argcr = 0;//需要参数个数
+    bool isNumber(QString input) { //判断字符串是否是纯数字（非负浮点数）
+        return (input.contains(QRegularExpression("^-?\\d+(\\.\\d+)?$"))? true : false);
+    }
+public:
+    PrintfStmt() {
+        root = "PRINTF";
+        form.clear();
+        list.clear();
+    }
+    ~PrintfStmt() {}
+public:
+    void addArg(expression* arg) {
+        list.append(arg);
+        argc++;
+    }
+    expression* getArg(int n) {
+        if (n >= argc) {
+            qDebug() << "下标越界";
+            return nullptr;
+        }
+        else return list[n];
+    }
+    void setForm(QString f) {
+        form = f;
+    }
+    QString OP() {
+        QString result = "";
+        if (argcr == 0) {//没有输出格式限制时
+            qDebug()<<"无格式输出";
+            if (list[0]->type == "DOUBLE") {
+                result = QString::number(*list[0]->value());
+            }
+            else if(list[0]->type == "STR") {
+                result = list[0]->value_str();
+            }
+        }
+        else if (argcr >= 1) {//解析form
+            QStringList formList = form.split(" ");//分割
+            int size = formList.size();
+            int argt = 0;
+            for (int i = 0; i < size; i++) {
+                if(isNumber(formList[i])) {
+                    qDebug()<<"num";
+                    result = result + formList[i] + " ";
+                }
+                else if (formList[i] == "{}") {
+                    qDebug() << "{}";
+                    if(list[argt]->type=="STR"){
+                        result = result + list[argt]->value_str() + " ";
+                        argt++;
+                    }
+                    else if (list[argt]->type == "DOUBLE") {
+                        qDebug()<< "num";
+                        result = result + QString::number(*list[argt]->value()) + " ";
+                        argt++;
+                    }
+                }
+                else {//ident
+                    qDebug()<<"string";
+                    result = result + formList[i] + " ";
+                }
+            }
+        }
+        result.remove(QRegularExpression("\\s$"));
+        result = "\"" + result + "\"";
+        return result;
+    }
+
+    QString get_form(){
+        return form;
+    }
+    QVector<expression*> get_list(){
+        return list;
+    }
+    bool equal() {
+        QStringList formList = form.split(" ");//分割
+        int size = formList.size();
+        for (int i = 0; i < size; i++) {//计算实际参数个数
+            if (formList[i] == "{}")
+                argcr++;
+        }
+        qDebug() << argc << " " << argcr;
+        if (argcr != argc && argcr != 0) return false;
+        else return true;
+    }
+};
+
 class InputStmt: public statement {//左子树是表达式（标识符），右子树是空
 private:
     expression* left;
@@ -114,6 +216,28 @@ public:
         left = le;
     }
     ~InputStmt() {}
+    expression* Left(){
+        return left;
+    }
+    expression* Right(){
+        return right;
+    }
+};
+
+class InputsStmt: public statement {//左子树是表达式（标识符），右子树是空
+private:
+    expression* left;
+    expression* right;
+public:
+    InputsStmt() {
+        root = "INPUTS";
+        left = nullptr;
+        right = nullptr;
+    }
+    void setLeft(expression* le) {
+        left = le;
+    }
+    ~InputsStmt() {}
     expression* Left(){
         return left;
     }

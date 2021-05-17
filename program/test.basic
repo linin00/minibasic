@@ -1,12 +1,13 @@
 10 REM Program to test minibasic
-20 INPUT n1
-30 LET n2 = 0
-31 LET n2 = n2 + 1
-40 LET total = n1**n2
+20 INPUT a1
+21 PRINTF a1
+30 LET a2 = 0
+31 LET a2 = a2 + 1
+40 LET total = a1**a2
 50 PRINT total
 51 IF total < 300000 THEN 31
-52 LET n3 = n2
-53 LET n3 = n3/2
-54 PRINT n3
-55 IF n3 > (2 + 3 - 4) THEN 53
+52 LET a3 = a2
+53 LET a3 = a3/2
+54 PRINT a3
+55 IF a3 > (2 + 3 - 4) THEN 53
 60 END
